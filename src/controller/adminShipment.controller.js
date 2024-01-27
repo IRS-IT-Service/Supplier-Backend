@@ -47,6 +47,45 @@ const addAdminShipment = async (req, res) => {
   }
 };
 
+// const getAllAdminShipment = async (req, res) => {
+//   try {
+//     const { id } = req.query;
+//     const page = parseInt(req.query.page) + 1 ;
+//     const limit = parseInt(req.query.limit) || 12;
+//     const skip = (page - 1) * limit;
+    
+    
+//     const shipmentData = await adminShipment.find().sort({ updatedAt: -1 });
+
+//     if (!shipmentData) {
+//       return res.status(400).send("No shipment exist");
+//     }
+
+//     res.status(200).send(shipmentData);
+//   } catch (err) {
+//     console.log(err);
+//     res.status(400).send(err);
+//   }
+// };
+
+const getOneAdminShipment = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const shipmentData = await adminShipment.findOne({ TrackingId: id });
+
+    if (!shipmentData) {
+      throw new Error("No shipment exist!");
+    }
+
+    res.status(200).send({status:true,message:"Shipment fetch successfully",data:shipmentData});
+  } catch (err) {
+
+    res.status(400).send(err.message);
+  }
+};
+
+
+
 const getVendorAdminShipment = async (req, res) => {
   try {
     const { id } = req.query;
@@ -79,4 +118,4 @@ const getVendorAdminShipment = async (req, res) => {
   }
 };
 
-module.exports = { addAdminShipment, getVendorAdminShipment };
+module.exports = { addAdminShipment, getVendorAdminShipment,getOneAdminShipment };
