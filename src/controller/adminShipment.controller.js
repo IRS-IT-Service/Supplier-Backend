@@ -47,26 +47,35 @@ const addAdminShipment = async (req, res) => {
   }
 };
 
-// const getAllAdminShipment = async (req, res) => {
-//   try {
-//     const { id } = req.query;
-//     const page = parseInt(req.query.page) + 1 ;
-//     const limit = parseInt(req.query.limit) || 12;
-//     const skip = (page - 1) * limit;
-    
-    
-//     const shipmentData = await adminShipment.find().sort({ updatedAt: -1 });
+const getAllAdminShipment = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) + 1;
+    const limit = parseInt(req.query.limit) || 12;
+    const skip = (page - 1) * limit;
 
-//     if (!shipmentData) {
-//       return res.status(400).send("No shipment exist");
-//     }
+    const shipmentData = await adminShipment
+      .find()
+      .sort({ updatedAt: -1 })
+      .skip(skip)
+      .limit(limit);
 
-//     res.status(200).send(shipmentData);
-//   } catch (err) {
-//     console.log(err);
-//     res.status(400).send(err);
-//   }
-// };
+    if (!shipmentData) {
+      throw new Error("No shipment exist !");
+    }
+    const total = await adminShipment.countDocuments({});
+    res.status(200).send({
+      status: true,
+      message: "Payment data fetch successfully",
+      data: shipmentData,
+      currentPage: page,
+      itemCount: shipmentData.length,
+      itemsPerPage: limit,
+      totalItems: Math.ceil(total),
+    });
+  } catch (err) {
+    res.status(400).send(err.message);
+  }
+};
 
 const getOneAdminShipment = async (req, res) => {
   try {
@@ -74,23 +83,24 @@ const getOneAdminShipment = async (req, res) => {
     const shipmentData = await adminShipment.findOne({ TrackingId: id });
 
     if (!shipmentData) {
-      throw new Error("No shipment exist!");
+      throw new Error("No shipment exist !");
     }
 
-    res.status(200).send({status:true,message:"Shipment fetch successfully",data:shipmentData});
+    res.status(200).send({
+      status: true,
+      message: "Shipment fetch successfully",
+      data: shipmentData,
+    });
   } catch (err) {
-
     res.status(400).send(err.message);
   }
 };
-
-
 
 const getVendorAdminShipment = async (req, res) => {
   try {
     const { id } = req.query;
     const page = parseInt(req.query.page) + 1;
-    const limit = parseInt(req.query.limit) || 50;
+    const limit = parseInt(req.query.limit) || 12;
     const skip = (page - 1) * limit;
     const shipmentData = await adminShipment
       .find({ VendorId: id })
@@ -118,4 +128,37 @@ const getVendorAdminShipment = async (req, res) => {
   }
 };
 
-module.exports = { addAdminShipment, getVendorAdminShipment,getOneAdminShipment };
+const verifyAdminShipment = async (req, res) => {
+  try {
+    const { status ,TrackingId } = req.body;
+
+if(!TrackingId){
+  throw new Error("Shipment not found !")
+}
+
+    const shipmentData = await adminShipment.findOne({ TrackingId});
+    const vendorData = await vendor.findOne({
+      VendorId: shipmentData.VendorId,
+    });
+    const shipmentUpdate = await adminShipment.findOneAndUpdate(
+      { TrackingId },
+      {
+        $set: {
+          isFullfilled: status,
+        },
+      }
+    );
+
+    res.status(200).send({status:true ,message:"Shipment updated successfully"});
+  } catch (err) {
+    res.status(400).send(err.message);
+  }
+};
+
+module.exports = {
+  addAdminShipment,
+  getVendorAdminShipment,
+  getOneAdminShipment,
+  getAllAdminShipment,
+  verifyAdminShipment
+};

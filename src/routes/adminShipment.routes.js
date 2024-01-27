@@ -5,7 +5,9 @@ const multerFunction = require("../commonFunction/multerFunction");
 const {
   addAdminShipment,
   getVendorAdminShipment,
-  getOneAdminShipment
+  getOneAdminShipment,
+  getAllAdminShipment,
+  verifyAdminShipment
 } = require("../controller/adminShipment.controller");
 
 const storage = multerFunction("adminShipment");
@@ -16,5 +18,7 @@ router.post('/addAdminShipment',uploadStorage.fields([{name:"file",maxCount:1}])
 
 router.get("/getVendorAdminShipment",getVendorAdminShipment)
 router.get("/getOneAdminShipment/:id",getOneAdminShipment)
+router.get("/getAllAdminShipment",getAllAdminShipment)
+router.post("/verifyAdminShipment",verifyAdminShipment)
 
 module.exports = router;
