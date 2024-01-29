@@ -118,12 +118,12 @@ const getAllPayment = async (req, res) => {
     res.status(200).send({
       status: true,
       message: "All Payment data fetch successfully",
-      data: result,
       page: page,
       totalCount: total,
       itemsPerPage: limit,
       currentItemsCount: result.length,
       totalPages: Math.ceil(total / limit),
+      data: result,
     });
   } catch (err) {
     res.status(400).send(err.message);
