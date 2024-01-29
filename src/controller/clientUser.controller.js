@@ -96,7 +96,7 @@ const authClientUser = async (req, res) => {
       vendorId: clientUserData.VendorId,
       clientType: clientUserData.clientType,
       CompanyName: vendorUserData.CompanyName,
-      photo: vendorUserData?.companyLogo[0]?.filename,
+      photo: vendorUserData?.companyLogo?.filename,
     };
     res
       .status(200)
