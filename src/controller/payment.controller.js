@@ -59,31 +59,31 @@ const addPayment = async (req, res) => {
 const getPayments = async (req, res) => {
   try {
     const { id } = req.query;
-    const page = parseInt(req.query.page) + 1 ;
+    const page = parseInt(req.query.page) + 1;
     const limit = parseInt(req.query.limit) || 12;
     const skip = (page - 1) * limit;
     if (!id) {
       throw new Error("please add vendor id to get the payments");
     }
-    const result = await payment.find({ VendorId: id }).sort({ createdAt: -1 }).skip(skip)
-    .limit(limit);
-    const total = await payment.countDocuments({VendorId:id});
+    const result = await payment
+      .find({ VendorId: id })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+    const total = await payment.countDocuments({ VendorId: id });
 
-
-    if(!result){
-        throw new Error("Payment not found");
+    if (!result) {
+      throw new Error("Payment not found");
     }
-    res
-      .status(200)
-      .send({
-        status: true,
-        message: "Payment data fetch successfully",
-        data: result,
-        currentPage: page,
-        itemCount:result.length,
-        itemsPerPage: limit,
-        totalItems:Math.ceil(total),
-      });
+    res.status(200).send({
+      status: true,
+      message: "Payment data fetch successfully",
+      data: result,
+      currentPage: page,
+      itemCount: result.length,
+      itemsPerPage: limit,
+      totalItems: Math.ceil(total),
+    });
   } catch (err) {
     res.status(400).send(err.message);
   }
@@ -91,26 +91,40 @@ const getPayments = async (req, res) => {
 
 const getAllPayment = async (req, res) => {
   try {
-    const page = parseInt(req.query.page) + 1;
-    const limit = parseInt(req.query.limit) || 50;
+    let { page = 1, limit = 50, filterById } = req.query;
+
+    page = parseInt(page);
+    limit = parseInt(limit);
+
     const skip = (page - 1) * limit;
-    const result = await payment
-      .find({})
-      .sort({ updateAt: -1 })
-      .skip(skip)
-      .limit(limit);
-      const total = await payment.countDocuments({});
-    res
-      .status(200)
-      .send({
-        status: true,
-        message: "All Payment data fetch successfully",
-        data: result,
-        currentPage: page,
-        itemCount: result.length,
-        itemsPerPage: limit,
-        totalPages: Math.ceil(total),
-      });
+    let result;
+    let total;
+    if (filterById) {
+      result = await payment
+        .find({ VendorId: filterById })
+        .sort({ updatedAt: -1 })
+        .skip(skip)
+        .limit(limit);
+      total = await payment.countDocuments({ VendorId: filterById });
+    } else {
+      result = await payment
+        .find({})
+        .sort({ updatedAt: -1 })
+        .skip(skip)
+        .limit(limit);
+      total = await payment.countDocuments({});
+    }
+
+    res.status(200).send({
+      status: true,
+      message: "All Payment data fetch successfully",
+      page: page,
+      totalCount: total,
+      itemsPerPage: limit,
+      currentItemsCount: result.length,
+      totalPages: Math.ceil(total / limit),
+      data: result,
+    });
   } catch (err) {
     res.status(400).send(err.message);
   }
@@ -119,25 +133,25 @@ const getAllPayment = async (req, res) => {
 //update payment
 const updatePaymentClient = async (req, res) => {
   try {
-
-    const { ReferenceId ,usd } = req.body;
+    const { ReferenceId, usd } = req.body;
     const RecievedFile =
       req.files && req.files.file ? req.files.file[0].filename : "";
 
-    const paymentData = await payment.findOne({ ReferenceId});
+    const paymentData = await payment.findOne({ ReferenceId });
     const vendorData = await vendor.findOne({ VendorId: paymentData.VendorId });
     if (usd > paymentData.PaymentAmount) {
-      throw new Error ("Invalid payment amount");
+      throw new Error("Invalid payment amount");
     }
 
     if (!ReferenceId || !usd) {
-      throw new Error ("please add reference id and usd amount to update the payments");
+      throw new Error(
+        "please add reference id and usd amount to update the payments"
+      );
     }
     if (!RecievedFile) {
-      throw new Error ("please add receipt");
+      throw new Error("please add receipt");
     }
 
-  
     const result = await payment.updateOne(
       { ReferenceId },
       {
@@ -151,25 +165,24 @@ const updatePaymentClient = async (req, res) => {
       }
     );
 
-    res.status(200).send({status:true, message:"Payment received successfully"});
+    res
+      .status(200)
+      .send({ status: true, message: "Payment received successfully" });
   } catch (err) {
-
     res.status(400).send(err.message);
   }
 };
-
 
 //update Admin paymnet
 
 const updatePaymentAdmin = async (req, res) => {
   try {
- 
     const { ReferenceId, isReject } = req.body;
 
-    if(!ReferenceId){
+    if (!ReferenceId) {
       throw new Error("Please add ReferenceId");
     }
-  
+
     if (isReject) {
       const result = await payment.findOneAndUpdate(
         { ReferenceId },
@@ -180,13 +193,13 @@ const updatePaymentAdmin = async (req, res) => {
           },
         }
       );
-   
+
       return res.status(200).send("Payment rejected successfully");
     }
 
     const paymentUSD = await payment.findOne({ ReferenceId });
 
-    if(!paymentUSD){
+    if (!paymentUSD) {
       throw new Error("Reference Id not matching");
     }
 
@@ -194,7 +207,6 @@ const updatePaymentAdmin = async (req, res) => {
       VendorId: paymentUSD.VendorId,
     });
 
-   
     const clientUpdate = await clientUser.findOneAndUpdate(
       { VendorId: paymentUSD.VendorId },
       {
@@ -234,12 +246,18 @@ const updatePaymentAdmin = async (req, res) => {
       const newTransaction = await transaction.create(tInfo);
     }
 
-    res.status(200).send({status:true, message:"Payment Verify successfully"});
+    res
+      .status(200)
+      .send({ status: true, message: "Payment Verify successfully" });
   } catch (err) {
-   
     res.send(400).send(err);
   }
 };
 
-
-module.exports = { addPayment, getAllPayment, getPayments,updatePaymentClient,updatePaymentAdmin };
+module.exports = {
+  addPayment,
+  getAllPayment,
+  getPayments,
+  updatePaymentClient,
+  updatePaymentAdmin,
+};
