@@ -56,6 +56,10 @@ app.use("/purchase", purchase);
 const shipment = require("./src/routes/shipment.routes");
 app.use("/shipment", shipment);
 
+///adminShipment
+const adminShipment = require("./src/routes/adminShipment.routes");
+app.use("/adminShipment", adminShipment);
+
 app.listen(port, () => {
   console.log(`server listening on ${port}`);
 });
