@@ -12,7 +12,7 @@ app.use(cookieParser());
 connectDB();
 
 // cors middleware
-app.use(cors({ origin: process.env.CLIENTURL, credentials: true }));
+app.use(cors({ origin: true, credentials: true }));
 
 app.use(express.urlencoded({ extended: false }));
 
