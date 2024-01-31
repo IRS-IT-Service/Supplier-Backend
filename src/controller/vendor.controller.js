@@ -136,6 +136,11 @@ const toggleVendor = async (req, res) => {
       { $set: updateFields },
       { new: true } 
     );
+    const updatedVendor = await vendor.findOneAndUpdate(
+      { VendorId },
+      { $set: updateFields },
+      { new: true } 
+    );
 
     res.status(200).send({
       status: true,
