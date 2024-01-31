@@ -32,6 +32,10 @@ const clientUserSchema = mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    isDelete: {
+      type: Boolean,
+      default: false,
+    },
     clientType: {
       type: String,
       required: true,
