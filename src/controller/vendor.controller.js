@@ -120,13 +120,11 @@ const getOneVendor = async (req, res) => {
     const VendorId = req.params.id;
     console.log(VendorId);
     const VendorData = await vendor.findOne({ VendorId });
-    res
-      .status(200)
-      .send({
-        status: true,
-        message: "All Vendor fetched Successfully",
-        data: VendorData,
-      });
+    res.status(200).send({
+      status: true,
+      message: "All Vendor fetched Successfully",
+      data: VendorData,
+    });
   } catch (err) {
     res.status(400).send(err.message);
   }
@@ -135,7 +133,6 @@ const getOneVendor = async (req, res) => {
 const updateVendor = async (req, res) => {
   try {
     const VendorId = req.params.id;
-
 
     let companyLogo = req.files && req.files.logo ? req.files.logo[0] : "";
     let companyCertificate =
@@ -156,8 +153,6 @@ const updateVendor = async (req, res) => {
       beneficiaryAddress,
       bankDetails,
     } = req.body;
-
-
 
     let info = {
       CompanyName: companyName,
@@ -181,14 +176,20 @@ const updateVendor = async (req, res) => {
 
     const result = await vendor.updateOne({ VendorId }, { $set: info });
 
-    if(!result){
-      throw new Error("Vendore not found !")
+    if (!result) {
+      throw new Error("Vendore not found !");
     }
     const resultClient = await clientUser.updateOne(
       { VendorId },
-      { $set: { companyName} }
+      { $set: { companyName } }
     );
-    res.status(200).send({status:true , message:"Vendor Update successfully",data:info});
+    res
+      .status(200)
+      .send({
+        status: true,
+        message: "Vendor Update successfully",
+        data: info,
+      });
   } catch (err) {
     res.status(400).send(err.message);
   }
@@ -199,13 +200,11 @@ const deleteVendor = async (req, res) => {
     const VendorId = req.params.id;
     const result = await vendor.deleteOne({ VendorId });
     const resultClientVendor = await clientUser.deleteOne({ VendorId });
-    res
-      .status(200)
-      .send({
-        status: true,
-        message: "Vendor Delete Successfully",
-        data: result,
-      });
+    res.status(200).send({
+      status: true,
+      message: "Vendor Delete Successfully",
+      data: result,
+    });
   } catch (err) {
     console.log(err);
     res.status(400).send(err);
@@ -217,5 +216,5 @@ module.exports = {
   getAllVendor,
   getOneVendor,
   deleteVendor,
-  updateVendor
+  updateVendor,
 };
