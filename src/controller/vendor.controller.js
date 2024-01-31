@@ -104,8 +104,6 @@ const getAllVendor = async (req, res) => {
       };
     });
 
- 
-
     res.status(200).send({
       status: true,
       message: "All vendor Fetched successfully",
@@ -116,7 +114,108 @@ const getAllVendor = async (req, res) => {
     res.status(400).send(err.message);
   }
 };
+
+const getOneVendor = async (req, res) => {
+  try {
+    const VendorId = req.params.id;
+    console.log(VendorId);
+    const VendorData = await vendor.findOne({ VendorId });
+    res
+      .status(200)
+      .send({
+        status: true,
+        message: "All Vendor fetched Successfully",
+        data: VendorData,
+      });
+  } catch (err) {
+    res.status(400).send(err.message);
+  }
+};
+
+const updateVendor = async (req, res) => {
+  try {
+    const VendorId = req.params.id;
+
+
+    let companyLogo = req.files && req.files.logo ? req.files.logo[0] : "";
+    let companyCertificate =
+      req.files && req.files.certificate ? req.files.certificate[0] : "";
+
+    const {
+      companyName,
+      concernPerson,
+      email,
+      mobile,
+      telephone,
+      website,
+      comment,
+      address,
+      chineseCompanyName,
+      chineseConcernPerson,
+      chineseAddress,
+      beneficiaryAddress,
+      bankDetails,
+    } = req.body;
+
+
+
+    let info = {
+      CompanyName: companyName,
+      ConcernPerson: concernPerson,
+      Email: email,
+      Mobile: mobile,
+      companyLogo,
+      companyCertificate,
+      Tele: telephone,
+      website: website,
+      comment: comment,
+      Address: address ? JSON.parse(address) : "",
+      ChineseCompanyName: chineseCompanyName,
+      ChineseConcernPerson: chineseConcernPerson,
+      chineseAddress: chineseAddress ? JSON.parse(chineseAddress) : "",
+      BeneficiaryAddress: beneficiaryAddress
+        ? JSON.parse(beneficiaryAddress)
+        : "",
+      BankDetails: bankDetails ? JSON.parse(bankDetails) : "",
+    };
+
+    const result = await vendor.updateOne({ VendorId }, { $set: info });
+
+    if(!result){
+      throw new Error("Vendore not found !")
+    }
+    const resultClient = await clientUser.updateOne(
+      { VendorId },
+      { $set: { companyName} }
+    );
+    res.status(200).send({status:true , message:"Vendor Update successfully",data:info});
+  } catch (err) {
+    res.status(400).send(err.message);
+  }
+};
+
+const deleteVendor = async (req, res) => {
+  try {
+    const VendorId = req.params.id;
+    const result = await vendor.deleteOne({ VendorId });
+    const resultClientVendor = await clientUser.deleteOne({ VendorId });
+    res
+      .status(200)
+      .send({
+        status: true,
+        message: "Vendor Delete Successfully",
+        data: result,
+      });
+  } catch (err) {
+    console.log(err);
+    res.status(400).send(err);
+  }
+};
+
 module.exports = {
   registerVendor,
   getAllVendor,
+  getOneVendor,
+  deleteVendor,
+  updateVendor
 };

@@ -1,6 +1,9 @@
 const {
   registerVendor,
   getAllVendor,
+  getOneVendor,
+  deleteVendor,
+  updateVendor
 } = require("../controller/vendor.controller");
 const express = require("express");
 const router = express.Router();
@@ -21,5 +24,11 @@ router.post(
   registerVendor
 );
 router.get("/getAllVendor", jwtAuthentication, getAllVendor);
+router.get("/getOneVendor/:id", jwtAuthentication, getOneVendor);
+router.delete("/deleteVendor/:id", jwtAuthentication, deleteVendor);
+router.put("/updateVendor/:id",  upload.fields([
+  { name: "logo", maxCount: 1 },
+  { name: "certificate", maxCount: 1 },
+]), jwtAuthentication, updateVendor);
 
 module.exports = router;
