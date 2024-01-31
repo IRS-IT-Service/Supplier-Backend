@@ -188,7 +188,7 @@ const updateVendor = async (req, res) => {
       .send({
         status: true,
         message: "Vendor Update successfully",
-        data: info,
+       
       });
   } catch (err) {
     res.status(400).send(err.message);
