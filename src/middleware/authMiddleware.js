@@ -17,8 +17,7 @@ const jwtAuthentication = async (req, res, next) => {
       console.log(decoded.id);
 
       req.user = await user.findById(decoded.id).select("-password");
-      const users = await user.findById(decoded.id).select("-password");
-      console.log(users);
+    
       if (!req.user.isActive) {
         return res.status(401).send("Account Paused Token Failed");
       }
