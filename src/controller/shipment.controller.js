@@ -129,11 +129,18 @@ const getAllShipment = async (req, res) => {
 
 const verifyShipment = async (req, res) => {
   try {
-    const { isReject, TrackingId } = req.body;
-    const shipmentData = await shipment.findOne({ TrackingId });
-    if (isReject) {
+    const { status, trackingId } = req.body;
+
+    if (typeof status !== "boolean" || !trackingId) {
+      throw new Error("status and trackingId are required");
+    }
+    const shipmentData = await shipment.findOne({ TrackingId: trackingId });
+    if (!shipmentData) {
+      throw new Error("No shipment exist");
+    }
+    if (status === false) {
       const shipmentUpdate = await shipment.findOneAndUpdate(
-        { TrackingId },
+        { TrackingId: trackingId },
         {
           $set: {
             isRejected: true,
@@ -147,22 +154,17 @@ const verifyShipment = async (req, res) => {
     }
 
     const shipmentUpdate = await shipment.findOneAndUpdate(
-      { TrackingId },
+      { TrackingId: trackingId },
       {
         $set: {
-          isFullfilled: !isReject,
+          isFullfilled: true,
         },
       }
     );
 
-    if (!shipmentUpdate) {
-      throw new Error("Shipment not found");
-    }
-
     res.status(200).send({
       status: true,
       message: "Shipment update successfully",
-      data: shipmentUpdate,
     });
   } catch (err) {
     res.status(400).send(err.message);
