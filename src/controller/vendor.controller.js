@@ -115,6 +115,37 @@ const getAllVendor = async (req, res) => {
   }
 };
 
+const toggleVendor = async (req, res) => {
+  try {
+    const { isActive, VendorId } = req.body;
+
+    const VendorData = await vendor.findOne({ VendorId });
+
+    if (!VendorData) {
+      throw new Error("Vendor not found");
+    }
+
+    let updateFields = {};
+
+    if (isActive !== undefined) {
+      updateFields.isActive = isActive;
+    }
+
+    const updatedUser = await clientUser.findOneAndUpdate(
+      { VendorId },
+      { $set: updateFields },
+      { new: true } 
+    );
+
+    res.status(200).send({
+      status: true,
+      message: "Vendor has been updated",
+      });
+  } catch (err) {
+    res.status(400).send(err.message);
+  }
+};
+
 const getOneVendor = async (req, res) => {
   try {
     const VendorId = req.params.id;
@@ -197,17 +228,37 @@ const updateVendor = async (req, res) => {
 
 const deleteVendor = async (req, res) => {
   try {
-    const VendorId = req.params.id;
-    const result = await vendor.deleteOne({ VendorId });
-    const resultClientVendor = await clientUser.deleteOne({ VendorId });
+    const { isDelete, VendorId } = req.body;
+
+    const VendorData = await vendor.findOne({ VendorId });
+
+    if (!VendorData) {
+      throw new Error("Vendor not found");
+    }
+
+    let updateFields = {};
+
+    if (isDelete !== undefined) {
+      updateFields.isDelete = isDelete;
+    }
+
+    const updatedUser = await clientUser.findOneAndUpdate(
+      { VendorId },
+      { $set: updateFields },
+      { new: true } 
+    );
+    const deleteVendor = await vendor.findOneAndUpdate(
+      { VendorId },
+      { $set: updateFields },
+      { new: true } 
+    );
+
     res.status(200).send({
       status: true,
-      message: "Vendor Delete Successfully",
-      data: result,
-    });
+      message: "Vendor has been delete",
+      });
   } catch (err) {
-    console.log(err);
-    res.status(400).send(err);
+    res.status(400).send(err.message);
   }
 };
 
@@ -217,4 +268,5 @@ module.exports = {
   getOneVendor,
   deleteVendor,
   updateVendor,
+  toggleVendor
 };
