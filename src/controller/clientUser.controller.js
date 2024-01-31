@@ -108,9 +108,7 @@ const authClientUser = async (req, res) => {
 
 const getAllClientUser = async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    let limit = parseInt(req.query.limit) || 50;
-
+    let { page = 1, limit = 50 } = req.query;
     if (req.query.limit === "*") {
       const result = await clientUser.aggregate([
         {
@@ -145,6 +143,8 @@ const getAllClientUser = async (req, res) => {
       });
     }
 
+    page = parseInt(page);
+    limit = parseInt(limit);
     const skip = (page - 1) * limit;
 
     const result = await clientUser
@@ -158,11 +158,12 @@ const getAllClientUser = async (req, res) => {
     res.status(200).send({
       status: true,
       message: "All Client  fetch sucessfully",
-      data: result,
-      currentPage: page,
-      itemCount: result.length,
+      page: page,
+      totalCount: total,
       itemsPerPage: limit,
-      totalItmes: Math.ceil(total),
+      currentItemsCount: result.length,
+      totalPages: Math.ceil(total / limit),
+      data: result,
     });
   } catch (err) {
     console.log(err);
