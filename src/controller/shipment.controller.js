@@ -82,93 +82,117 @@ const getShipment = async (req, res) => {
 
 const getAllShipment = async (req, res) => {
   try {
-    const page = parseInt(req.query.page) + 1;
-    const limit = parseInt(req.query.limit) || 50;
+    let { page = 1, limit = 50, filterById } = req.query;
+    page = parseInt(page);
+    limit = parseInt(limit);
+
     const skip = (page - 1) * limit;
+
     const shipmentData = await shipment
       .find({})
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
 
-    if (!shipmentData) {
-        throw new Error("No shipment exist");
+    let result;
+    let total;
+    if (filterById) {
+      result = await shipment
+        .find({ VendorId: filterById })
+        .sort({ updatedAt: -1 })
+        .skip(skip)
+        .limit(limit);
+      total = await shipment.countDocuments({ VendorId: filterById });
+    } else {
+      result = await shipment
+        .find({})
+        .sort({ updatedAt: -1 })
+        .skip(skip)
+        .limit(limit);
+      total = await shipment.countDocuments({});
     }
-    const total = await shipment.countDocuments({});
 
     res.status(200).send({
-        status: true,
-        message: "Shipment fetch successfully",
-        data: shipmentData,
-        currentPage: page,
-        itemCount: shipmentData.length,
-        itemsPerPage: limit,
-        totalItems: Math.ceil(total),
-      });
+      status: true,
+      message: "Shipment fetch successfully",
+      page: page,
+      totalCount: total,
+      itemsPerPage: limit,
+      currentItemsCount: result.length,
+      totalPages: Math.ceil(total / limit),
+      data: result,
+    });
   } catch (err) {
-
     res.status(400).send(err.message);
   }
 };
 
 const verifyShipment = async (req, res) => {
-    try {
-
-      const { isReject ,TrackingId } = req.body;
-      const shipmentData = await shipment.findOne({ TrackingId});
-      if (isReject) {
-        const shipmentUpdate = await shipment.findOneAndUpdate(
-          { TrackingId},
-          {
-            $set: {
-              isRejected: true,
-            },
-          }
-        );
-       
-        return res.status(200).send({status:true ,message:"shipment rejected successfully"});
-      }
-  
+  try {
+    const { isReject, TrackingId } = req.body;
+    const shipmentData = await shipment.findOne({ TrackingId });
+    if (isReject) {
       const shipmentUpdate = await shipment.findOneAndUpdate(
-        { TrackingId},
+        { TrackingId },
         {
           $set: {
-            isFullfilled: !isReject,
+            isRejected: true,
           },
         }
       );
 
-      if(!shipmentUpdate){
-        throw new Error("Shipment not found")
-      }
-    
-      res.status(200).send({status:true,message:"Shipment update successfully",data:shipmentUpdate});
-    } catch (err) {
- 
-      res.status(400).send(err.message);
+      return res
+        .status(200)
+        .send({ status: true, message: "shipment rejected successfully" });
     }
-  };
-  
-  const getOneShipment = async (req, res) => {
-    try {
-      const { id } = req.params;
-      const shipmentData = await shipment.findOne({ TrackingId: id });
-  
-      if (!shipmentData) {
-        throw new Error("No shipment exist");
+
+    const shipmentUpdate = await shipment.findOneAndUpdate(
+      { TrackingId },
+      {
+        $set: {
+          isFullfilled: !isReject,
+        },
       }
-  
-      res.status(200).send({status:true,message:"Shipment fetch successfully",data:shipmentData});
-    } catch (err) {
-      console.log(err);
-      res.status(400).send(err.message);
+    );
+
+    if (!shipmentUpdate) {
+      throw new Error("Shipment not found");
     }
-  };
+
+    res.status(200).send({
+      status: true,
+      message: "Shipment update successfully",
+      data: shipmentUpdate,
+    });
+  } catch (err) {
+    res.status(400).send(err.message);
+  }
+};
+
+const getOneShipment = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const shipmentData = await shipment.findOne({ TrackingId: id });
+
+    if (!shipmentData) {
+      throw new Error("No shipment exist");
+    }
+
+    res.status(200).send({
+      status: true,
+      message: "Shipment fetch successfully",
+      data: shipmentData,
+    });
+  } catch (err) {
+    console.log(err);
+    res.status(400).send(err.message);
+  }
+};
 
 module.exports = {
   addShipment,
   getShipment,
   getAllShipment,
   getOneShipment,
-  verifyShipment
+  verifyShipment,
 };

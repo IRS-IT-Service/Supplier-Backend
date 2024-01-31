@@ -177,15 +177,15 @@ const updatePaymentClient = async (req, res) => {
 
 const updatePaymentAdmin = async (req, res) => {
   try {
-    const { ReferenceId, isReject } = req.body;
+    const { referenceId, status } = req.body;
 
-    if (!ReferenceId) {
+    if (!referenceId) {
       throw new Error("Please add ReferenceId");
     }
 
-    if (isReject) {
+    if (!status) {
       const result = await payment.findOneAndUpdate(
-        { ReferenceId },
+        { ReferenceId: referenceId },
         {
           $set: {
             isFullfilledClient: false,
@@ -194,13 +194,15 @@ const updatePaymentAdmin = async (req, res) => {
         }
       );
 
-      return res.status(200).send("Payment rejected successfully");
+      return res
+        .status(200)
+        .send({ status: true, message: "Payment Rejected successfully" });
     }
 
-    const paymentUSD = await payment.findOne({ ReferenceId });
+    const paymentUSD = await payment.findOne({ ReferenceId: referenceId });
 
     if (!paymentUSD) {
-      throw new Error("Reference Id not matching");
+      throw new Error("Reference not found");
     }
 
     const clientoldBalance = await clientUser.findOne({
@@ -218,7 +220,7 @@ const updatePaymentAdmin = async (req, res) => {
       }
     );
     const result = await payment.findOneAndUpdate(
-      { ReferenceId },
+      { ReferenceId: referenceId },
       {
         $set: {
           isFullfilledAdmin: true,
@@ -237,7 +239,7 @@ const updatePaymentAdmin = async (req, res) => {
         Currency: "USD",
         type: "cr",
         PaymentMode: "payment",
-        RefId: ReferenceId,
+        RefId: referenceId,
         PreviosAmount: Number(clientoldBalance.balanceUSD),
         FinalAmount:
           Number(clientoldBalance.balanceUSD) +
@@ -246,7 +248,7 @@ const updatePaymentAdmin = async (req, res) => {
       const newTransaction = await transaction.create(tInfo);
     }
 
-    res
+    return res
       .status(200)
       .send({ status: true, message: "Payment Verify successfully" });
   } catch (err) {
