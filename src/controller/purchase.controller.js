@@ -201,23 +201,39 @@ const getClientPurchase = async (req, res) => {
 
 const getAllPurchase = async (req, res) => {
   try {
-    const page = parseInt(req.query.page) + 1;
-    const limit = parseInt(req.query.limit) || 12;
+    let { page = 1, limit = 50, filterById } = req.query;
+
+    page = parseInt(page);
+    limit = parseInt(limit);
+
     const skip = (page - 1) * limit;
-    const result = await purchase
-      .find()
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
-    const total = await purchase.countDocuments({});
+    let result;
+    let total;
+    if (filterById) {
+      result = await purchase
+        .find({ VendorId: filterById })
+        .sort({ updatedAt: -1 })
+        .skip(skip)
+        .limit(limit);
+      total = await purchase.countDocuments({ VendorId: filterById });
+    } else {
+      result = await purchase
+        .find({})
+        .sort({ updatedAt: -1 })
+        .skip(skip)
+        .limit(limit);
+      total = await purchase.countDocuments({});
+    }
+
     res.status(200).send({
       status: true,
-      message: "All purchase data fetch successfully",
-      data: result,
-      currentPage: page,
-      itemCount: result.length,
+      message: "All Payment data fetch successfully",
+      page: page,
+      totalCount: total,
       itemsPerPage: limit,
-      totalItems: Math.ceil(total),
+      currentItemsCount: result.length,
+      totalPages: Math.ceil(total / limit),
+      data: result,
     });
   } catch (err) {
     res.status(400).send(err.message);
@@ -234,66 +250,71 @@ const getOnePurchase = async (req, res) => {
     const result = await purchase.findOne({
       PurchaseId: id,
     });
-    res
-      .status(200)
-      .send({
-        status: true,
-        message: "Purchase data fetch successfully",
-        data: result,
-      });
+    res.status(200).send({
+      status: true,
+      message: "Purchase data fetch successfully",
+      data: result,
+    });
   } catch (err) {
     res.status(400).send(err);
   }
 };
 
 const rejectPurchase = async (req, res) => {
-    try {
-      const { id } = req.params;
-      const purchaseData = await purchase.findOne({ PurchaseId: id });
-  
-      if (!purchaseData) {
-        throw new Error("Invalid data");
-      }
-  
-      const result = await purchase.findOneAndUpdate(
-        { PurchaseId: id },
-        { $set: { status: "Rejected" } },
-        { new: true }
-      );
-  
-      const VendorData = await clientUser.findOne({ VendorId: purchaseData.VendorId });
-  
-      if (VendorData.clientType === "RMBandUSD") {
-        const balanceAddRMB = await clientUser.findOneAndUpdate(
-          { VendorId: purchaseData.VendorId },
-          {
-            $set: {
-              balanceRMB: Number(VendorData.balanceRMB) + Number(purchaseData.PaymentAmount),
-            },
-          }
-        );
-      } else if (VendorData.clientType === "USD") {
-        const balanceAddUSD = await clientUser.findOneAndUpdate(
-          { VendorId: purchaseData.VendorId },
-          {
-            $set: {
-              balanceRMB: Number(VendorData.balanceRMB) + Number(purchaseData.PaymentAmount),
-            },
-          }
-        );
-      }
-  
-      const removeTransaction = await transaction.findOneAndDelete({
-        RefId: purchaseData.PurchaseId,
-      });
-  
-      res.status(200).send({ status: true, message: "Reject successfully", data: result });
-    } catch (err) {
-      console.error(err);
-      res.status(400).send({ status: false, message: err.message });
+  try {
+    const { id } = req.params;
+    const purchaseData = await purchase.findOne({ PurchaseId: id });
+
+    if (!purchaseData || purchaseData.status === "Rejected") {
+      throw new Error("Invalid data");
     }
-  };
-  
+
+    const result = await purchase.findOneAndUpdate(
+      { PurchaseId: id },
+      { $set: { status: "Rejected" } },
+      { new: true }
+    );
+
+    const VendorData = await clientUser.findOne({
+      VendorId: purchaseData.VendorId,
+    });
+
+    if (VendorData.clientType === "RMBandUSD") {
+      const balanceAddRMB = await clientUser.findOneAndUpdate(
+        { VendorId: purchaseData.VendorId },
+        {
+          $set: {
+            balanceRMB:
+              Number(VendorData.balanceRMB) +
+              Number(purchaseData.PaymentAmount),
+          },
+        }
+      );
+    } else if (VendorData.clientType === "USD") {
+      const balanceAddUSD = await clientUser.findOneAndUpdate(
+        { VendorId: purchaseData.VendorId },
+        {
+          $set: {
+            balanceRMB:
+              Number(VendorData.balanceRMB) +
+              Number(purchaseData.PaymentAmount),
+          },
+        }
+      );
+    }
+
+    const removeTransaction = await transaction.findOneAndDelete({
+      RefId: purchaseData.PurchaseId,
+    });
+
+    res
+      .status(200)
+      .send({ status: true, message: "Reject successfully", data: result });
+  } catch (err) {
+    console.error(err);
+    res.status(400).send({ status: false, message: err.message });
+  }
+};
 
 module.exports = {
   addPurchase,
@@ -301,6 +322,5 @@ module.exports = {
   getClientPurchase,
   getAllPurchase,
   getOnePurchase,
-  rejectPurchase
-  
+  rejectPurchase,
 };
