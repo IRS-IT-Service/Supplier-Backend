@@ -2,6 +2,7 @@ const clientUser = require("../model/clientUser.model");
 const vendor = require("../model/vender.model");
 const { generateToken } = require("../service/utils/generateToken");
 const sendMessage = require("../commonFunction/whatsAppMessage");
+const { link } = require("../routes/payment.routes");
 
 const registerClientUser = async (req, res) => {
   try {
@@ -95,7 +96,7 @@ const authClientUser = async (req, res) => {
       vendorId: clientUserData.VendorId,
       clientType: clientUserData.clientType,
       CompanyName: vendorUserData.CompanyName,
-      photo: vendorUserData?.companyLogo[0]?.filename,
+      photo: vendorUserData?.companyLogo?.filename,
     };
     res
       .status(200)
@@ -107,9 +108,43 @@ const authClientUser = async (req, res) => {
 
 const getAllClientUser = async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 50;
+    let { page = 1, limit = 50 } = req.query;
+    if (req.query.limit === "*") {
+      const result = await clientUser.aggregate([
+        {
+          $lookup: {
+            from: "vendors", // Replace 'vendors' with your actual collection name for Vendor
+            localField: "VendorId",
+            foreignField: "VendorId",
+            as: "vendorData",
+          },
+        },
+        {
+          $unwind: "$vendorData", // If there is at most one match, you can unwind to destructure the array
+        },
+        {
+          $project: {
+            _id: 1,
+            VendorId: 1,
+            PaymentAmount: 1,
+            ReferenceId: 1,
+            CompanyName: 1,
+            email: 1,
+            // Add other fields you want to include
+            ConcernPerson: "$vendorData.ConcernPerson",
+            // Add other fields from the Vendor model
+          },
+        },
+      ]);
+      return res.status(200).send({
+        status: true,
+        message: "All Client  fetch sucessfully",
+        data: result,
+      });
+    }
 
+    page = parseInt(page);
+    limit = parseInt(limit);
     const skip = (page - 1) * limit;
 
     const result = await clientUser
@@ -122,12 +157,13 @@ const getAllClientUser = async (req, res) => {
 
     res.status(200).send({
       status: true,
-      message: "Transaction fetch sucessfully",
-      data: result,
-      currentPage: page,
-      itemCount: result.length,
+      message: "All Client  fetch sucessfully",
+      page: page,
+      totalCount: total,
       itemsPerPage: limit,
-      totalItmes: Math.ceil(total),
+      currentItemsCount: result.length,
+      totalPages: Math.ceil(total / limit),
+      data: result,
     });
   } catch (err) {
     console.log(err);

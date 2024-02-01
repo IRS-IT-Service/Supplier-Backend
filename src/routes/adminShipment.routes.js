@@ -9,6 +9,7 @@ const {
   getAllAdminShipment,
   verifyAdminShipment
 } = require("../controller/adminShipment.controller");
+const { jwtAuthentication,clientJwtAuthentication } = require("../middleware/authMiddleware");
 
 const storage = multerFunction("adminShipment");
 
@@ -16,7 +17,7 @@ const uploadStorage = multer({ storage: storage });
 
 router.post('/addAdminShipment',uploadStorage.fields([{name:"file",maxCount:1}]),addAdminShipment)
 
-router.get("/getVendorAdminShipment",getVendorAdminShipment)
+router.get("/getVendorAdminShipment",clientJwtAuthentication,getVendorAdminShipment)
 router.get("/getOneAdminShipment/:id",getOneAdminShipment)
 router.get("/getAllAdminShipment",getAllAdminShipment)
 router.post("/verifyAdminShipment",verifyAdminShipment)
