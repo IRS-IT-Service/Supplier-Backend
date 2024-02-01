@@ -251,7 +251,7 @@ const removeUser = async (req, res) => {
     if (!userData) {
       throw new Error("user not found");
     }
-    res.status(200).send({ status: true, message: "user has been deleted" });
+    res.status(200).send({ status: true, message: "User has been deleted" });
   } catch (err) {
     res.status(400).send(err.message);
   }
