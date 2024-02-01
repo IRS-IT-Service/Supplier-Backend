@@ -170,6 +170,8 @@ const updateVendor = async (req, res) => {
   try {
     const VendorId = req.params.id;
 
+    const existingVendor = await vendor.findOne({VendorId})
+
     let companyLogo = req.files && req.files.logo ? req.files.logo[0] : "";
     let companyCertificate =
       req.files && req.files.certificate ? req.files.certificate[0] : "";
@@ -195,8 +197,8 @@ const updateVendor = async (req, res) => {
       ConcernPerson: concernPerson,
       Email: email,
       Mobile: mobile,
-      companyLogo,
-      companyCertificate,
+     companyLogo: companyLogo || existingVendor.companyLogo,
+     companyCertificate: companyCertificate || existingVendor.companyCertificate,
       Tele: telephone,
       website: website,
       comment: comment,
