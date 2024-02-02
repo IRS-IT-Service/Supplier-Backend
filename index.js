@@ -20,11 +20,6 @@ app.use(express.urlencoded({ extended: false }));
 const publicPath = path.join(__dirname, "public/upload");
 app.use(express.static(publicPath));
 
-
-app.get('/', (req, res) => {
-  res.json({ message: 'API is live!' });
-});
-
 // user routes
 const user = require("./src/routes/user.routes");
 app.use("/user", user);
