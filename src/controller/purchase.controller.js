@@ -14,13 +14,13 @@ const addPurchase = async (req, res) => {
       throw new Error("client doesnt exist");
     }
     if (isClient.clientType === "RMBandUSD") {
-      if (isClient.balanceRMB < req.body.paymentAmount) {
+      if (isClient.balanceRMB < +PaymentAmount) {
         throw new Error("insufficient Balance ");
       }
     }
 
     if (isClient.clientType === "USD") {
-      if (isClient.balanceUSD < req.body.paymentAmount) {
+      if (isClient.balanceUSD < +PaymentAmount) {
         throw new Error("insufficient Balance ");
       }
     }
