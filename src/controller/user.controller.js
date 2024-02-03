@@ -62,13 +62,13 @@ const userForgetOTP = async (req, res) => {
     if (!userExist) {
       throw new Error("User not found");
     }
-
+console.log(userExist);
     userExist.resetOtp = guiOTP;
     userExist.save();
     const clientId = await sendMessage(`Your Otp is ${guiOTP}`);
     res.status(200).send({
       status: true,
-      message: `We have sent a code to Admin Whatsapp No ${clientId}`,
+      message: `We have sent a code to Admin Whatsapp No ${clientId}`,data:userExist.userId
     });
   } catch (err) {
     res.status(400).send(err.message);
