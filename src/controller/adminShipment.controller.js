@@ -49,8 +49,9 @@ const addAdminShipment = async (req, res) => {
 
 const getAllAdminShipment = async (req, res) => {
   try {
-    const page = parseInt(req.query.page) + 1;
-    const limit = parseInt(req.query.limit) || 12;
+    let { page = 1, limit = 12 } = req.query;
+     page = parseInt(page);
+     limit = parseInt(limit) ;
     const skip = (page - 1) * limit;
 
     const shipmentData = await adminShipment
@@ -67,10 +68,11 @@ const getAllAdminShipment = async (req, res) => {
       status: true,
       message: "Payment data fetch successfully",
       data: shipmentData,
-      currentPage: page,
-      itemCount: shipmentData.length,
+      page: page,
+      totalCount: total,
       itemsPerPage: limit,
-      totalItems: Math.ceil(total),
+      // currentItemsCount: result.length,
+      totalPages: Math.ceil(total / limit),
     });
   } catch (err) {
     res.status(400).send(err.message);
