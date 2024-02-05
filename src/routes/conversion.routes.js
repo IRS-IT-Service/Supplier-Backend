@@ -9,7 +9,7 @@ const {
   updateConversionAdmin,
 } = require("../controller/conversion.controller");
 
-const storage = multerFunction("conversion");
+const storage = multerFunction("convertion");
 
 const uploadStorage = multer({ storage: storage });
 
