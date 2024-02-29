@@ -37,6 +37,11 @@ const addShipment = async (req, res) => {
     if (!shipmentData) {
       throw new Error("shipment creation failed");
     }
+    req.io.emit("notificationAdmin", {
+      type: "shipment",
+
+      message: `Shipment created by ${vendorData.ConcernPerson}`,
+    });
 
     res.status(200).send({
       status: true,
@@ -147,7 +152,11 @@ const verifyShipment = async (req, res) => {
           },
         }
       );
-
+      req.io.emit("notificationClient", {
+        type: "shipment",
+        vendorId: shipmentData.VendorId,
+        message: `Shipment with tracking id ${id} rejected`,
+      });
       return res
         .status(200)
         .send({ status: true, message: "shipment rejected successfully" });
@@ -161,7 +170,11 @@ const verifyShipment = async (req, res) => {
         },
       }
     );
-
+    req.io.emit("notificationClient", {
+      type: "shipment",
+      vendorId: shipmentData.VendorId,
+      message: `Shipment with tracking id ${id} accepted`,
+    });
     res.status(200).send({
       status: true,
       message: "Shipment update successfully",
