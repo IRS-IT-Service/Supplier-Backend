@@ -37,6 +37,11 @@ const addAdminShipment = async (req, res) => {
     if (!shipmentData) {
       throw new Error("shipment creation failed");
     }
+    req.io.emit("notificationClient", {
+      type: "recievedShipment",
+      vendorId: req.body.VendorId,
+      message: `shipment created with tracking id ${req.body.TrackingId}`,
+    });
     res.status(200).send({
       status: true,
       message: "Shipment created successfully",
@@ -150,7 +155,10 @@ if(!TrackingId){
         },
       }
     );
-
+    req.io.emit("notificationAdmin", {
+      type: "Shipment",
+      message: `shipment with tracking id ${id} accepted by ${vendorData.ConcernPerson}`,
+    });
     res.status(200).send({status:true ,message:"Shipment updated successfully"});
   } catch (err) {
     res.status(400).send(err.message);

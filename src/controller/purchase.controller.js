@@ -107,7 +107,10 @@ const addPurchase = async (req, res) => {
         }
       }
     }
-
+    req.io.emit("notificationAdmin", {
+      type: "Purchase",
+      message: `Purchase done by ${vendorData.ConcernPerson}`,
+    });
     res.status(200).send({
       sucess: true,
       message: "purchase created",
@@ -306,7 +309,12 @@ const rejectPurchase = async (req, res) => {
     const removeTransaction = await transaction.findOneAndDelete({
       RefId: purchaseData.PurchaseId,
     });
-
+    if (result) {
+      req.io.emit("notificationClient", {
+        type: "purchase",
+        message: `Purchase rejected ${purchaseData.PurchaseId}`,
+      });
+    }
     res
       .status(200)
       .send({ status: true, message: "Reject successfully", data: result });

@@ -29,6 +29,11 @@ const addPaymentRMB = async (req, res) => {
       Reciept: recieptFile,
     };
     const paymentData = await paymentRMB.create(info);
+    req.io.emit("notificationClient", {
+      type: "PaymentRmb",
+      vendorId: vendorId,
+      message: `Remittance Created of amount ¥ ${paymentAmount}`,
+    });
     res.status(200).send({
       sucess: true,
       message: "Payment RMB created successfully",
@@ -164,6 +169,11 @@ const verifyPaymentRMB = async (req, res) => {
             Number(isClient.balanceRMB) + Number(paymentData.PaymentAmount),
         };
         const newTransaction = await transaction.create(tInfo);
+        req.io.emit("notificationAdmin", {
+          type: "AddRMB",
+          vendorId: isVerifiy.VendorId,
+          message: `PaymentRMB amount ${paymentData.PaymentAmount} accepted by ${isVerifiy.VendorId}`,
+        });
         res
           .status(200)
           .send({ sucess: true, message: "Payment RMB Successfully Accepted" });
