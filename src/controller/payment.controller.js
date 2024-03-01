@@ -171,7 +171,7 @@ const updatePaymentClient = async (req, res) => {
       }
     );
     req.io.emit("notificationAdmin", {
-      type: "remittance",
+      type: "RemittanceList",
       message: `Remittance no ${paymentData.ReferenceId} Recieved by ${vendorData.ConcernPerson}`,
     });
     res

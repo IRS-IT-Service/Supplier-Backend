@@ -156,7 +156,7 @@ if(!TrackingId){
       }
     );
     req.io.emit("notificationAdmin", {
-      type: "recievedShipment",
+      type: "Shipment",
       message: `shipment with tracking id ${id} accepted by ${vendorData.ConcernPerson}`,
     });
     res.status(200).send({status:true ,message:"Shipment updated successfully"});

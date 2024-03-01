@@ -108,7 +108,7 @@ const addPurchase = async (req, res) => {
       }
     }
     req.io.emit("notificationAdmin", {
-      type: "purchase",
+      type: "Purchase",
       message: `Purchase done by ${vendorData.ConcernPerson}`,
     });
     res.status(200).send({

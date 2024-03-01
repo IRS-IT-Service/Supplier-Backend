@@ -170,7 +170,7 @@ const verifyPaymentRMB = async (req, res) => {
         };
         const newTransaction = await transaction.create(tInfo);
         req.io.emit("notificationAdmin", {
-          type: "paymentRMB",
+          type: "AddRMB",
           vendorId: isVerifiy.VendorId,
           message: `PaymentRMB amount ${paymentData.PaymentAmount} accepted by ${isVerifiy.VendorId}`,
         });

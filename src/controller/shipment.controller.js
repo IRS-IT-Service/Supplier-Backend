@@ -38,8 +38,8 @@ const addShipment = async (req, res) => {
       throw new Error("shipment creation failed");
     }
     req.io.emit("notificationAdmin", {
-      type: "shipment",
-
+      type: "Shipment",
+time:new Date(),
       message: `Shipment created by ${vendorData.ConcernPerson}`,
     });
 
