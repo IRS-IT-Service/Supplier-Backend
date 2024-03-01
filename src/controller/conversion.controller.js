@@ -31,6 +31,10 @@ const addConversion = async (req, res) => {
     };
 
     const result = await conversion.create(info);
+    req.io.emit("notificationAdmin", {
+      type: "convertion",
+      message: `USD amount ${req.body.usd} converted to ${req.body.rmb} rmb by ${vendorData.ConcernPerson}`,
+    });
     res.status(200).send({
       status: true,
       message: "Conversion successfully created",
@@ -137,7 +141,11 @@ const updateConversionAdmin = async (req, res) => {
           },
         }
       );
-
+      req.io.emit("notificationClient", {
+        type: "convertion",
+        vendorId: conversionData.VendorId,
+        message: `Conversion of amount ${conversionData.USD} USD rejected , try converting again `,
+      });
       return res.status(200).send({
         status: true,
         message: "Conversion Rejected",
@@ -203,6 +211,11 @@ const updateConversionAdmin = async (req, res) => {
       FinalAmount: updatedRMB,
     };
     const newTransaction = await transaction.create([InfoRMB, InfoUSD]);
+    req.io.emit("notificationClient", {
+      type: "convertion",
+      vendorId: conversionData.VendorId,
+      message: `Conversion of amount ${conversionData.USD} USD accepted `,
+    });
 
     return res.status(200).send({
       status: true,

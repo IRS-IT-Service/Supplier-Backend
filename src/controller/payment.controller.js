@@ -52,6 +52,11 @@ const addPayment = async (req, res) => {
     if (!paymentData) {
       throw new Error("Failed to create payment");
     }
+    req.io.emit("notificationClient", {
+      type: "remittance",
+      vendorId: VendorId,
+      message: `Remittance Created of amount $ ${PaymentAmount}`,
+    });
   } catch (err) {
     res.status(400).send(err.message);
   }
@@ -165,7 +170,10 @@ const updatePaymentClient = async (req, res) => {
         },
       }
     );
-
+    req.io.emit("notificationAdmin", {
+      type: "RemittanceList",
+      message: `Remittance no ${paymentData.ReferenceId} Recieved by ${vendorData.ConcernPerson}`,
+    });
     res
       .status(200)
       .send({ status: true, message: "Payment received successfully" });
@@ -194,7 +202,11 @@ const updatePaymentAdmin = async (req, res) => {
           },
         }
       );
-
+      req.io.emit("notificationClient", {
+        type: "remittance",
+        vendorId: result.VendorId,
+        message: `Remittance ${referenceId} rejected `,
+      });
       return res
         .status(200)
         .send({ status: true, message: "Payment Rejected successfully" });
@@ -248,6 +260,11 @@ const updatePaymentAdmin = async (req, res) => {
       };
       const newTransaction = await transaction.create(tInfo);
     }
+    req.io.emit("notificationClient", {
+      type: "remittance",
+      vendorId: paymentUSD.VendorId,
+      message: `Remittance ${referenceId} Accepted`,
+    });
 
     return res
       .status(200)
