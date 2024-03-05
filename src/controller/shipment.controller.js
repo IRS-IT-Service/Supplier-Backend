@@ -39,9 +39,11 @@ const addShipment = async (req, res) => {
     }
     req.io.emit("notificationAdmin", {
       type: "Shipment",
-time:new Date(),
+      time:new Date(),
       message: `Shipment created by ${vendorData.ConcernPerson}`,
     });
+
+    await sendMessage(`Shipment created by ${vendorData.ConcernPerson}`)
 
     res.status(200).send({
       status: true,

@@ -1,6 +1,8 @@
 const adminShipment = require("../model/adminShipment.model");
 const clientUser = require("../model/clientUser.model");
 const vendor = require("../model/vender.model");
+const sendMessage = require("../commonFunction/whatsAppMessage");
+
 
 const addAdminShipment = async (req, res) => {
   try {
@@ -159,6 +161,9 @@ if(!TrackingId){
       type: "Shipment",
       message: `shipment with tracking id ${id} accepted by ${vendorData.ConcernPerson}`,
     });
+
+    await sendMessage(`Shipment with tracking id ${id} accepted by ${vendorData.ConcernPerson}`)
+
     res.status(200).send({status:true ,message:"Shipment updated successfully"});
   } catch (err) {
     res.status(400).send(err.message);
