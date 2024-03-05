@@ -16,16 +16,9 @@ async function sendMessage(message) {
         },
       }
     );
-    return process.env.WHATSAPP_NUMBER.slice(2, -5)
-      .split("")
-      .map((item, index) => {
-        if (index < 5) {
-          return "*";
-        } else {
-          return item;
-        }
-      })
-      .join("");
+    
+    return response.data
+    
   } catch (err) {
     console.log(err);
   }

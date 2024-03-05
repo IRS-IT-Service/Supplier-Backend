@@ -111,6 +111,8 @@ const addPurchase = async (req, res) => {
       type: "Purchase",
       message: `Purchase done by ${vendorData.ConcernPerson}`,
     });
+
+    await sendMessage(`Purchase done by ${vendorData.ConcernPerson}`)
     res.status(200).send({
       sucess: true,
       message: "purchase created",
