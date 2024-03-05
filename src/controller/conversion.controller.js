@@ -3,12 +3,14 @@ const vendor = require("../model/vender.model");
 const clientUser = require("../model/clientUser.model");
 const generateUniqueId = require("generate-unique-id");
 const transaction = require("../model/transaction.model");
+const sendMessage = require("../commonFunction/whatsAppMessage");
 
 const addConversion = async (req, res) => {
   try {
     const { USD, VendorId, RMB, ConversionRate } = req.body;
 
     const isClient = await clientUser.findOne({ VendorId });
+    const VendorData = await vendor.findOne({ VendorId });
 
     if (!isClient) {
       throw new Error("User Doesn't exist");
@@ -33,10 +35,10 @@ const addConversion = async (req, res) => {
     const result = await conversion.create(info);
     req.io.emit("notificationAdmin", {
       type: "convertion",
-      message: `USD amount ${req.body.usd} converted to ${req.body.rmb} rmb by ${vendorData.ConcernPerson}`,
+      message: `USD amount ${req.body.usd} converted to ${req.body.rmb} rmb by ${VendorData.ConcernPerson}`,
     });
 
-    await sendMessage(`USD amount ${req.body.usd} converted to ${req.body.rmb} rmb by ${vendorData.ConcernPerson}`)
+    await sendMessage(`USD amount ${req.body.usd} converted to ${req.body.rmb} rmb by ${VendorData.ConcernPerson}`)
     res.status(200).send({
       status: true,
       message: "Conversion successfully created",
