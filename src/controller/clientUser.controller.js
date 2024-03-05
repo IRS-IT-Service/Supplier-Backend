@@ -1,7 +1,6 @@
 const clientUser = require("../model/clientUser.model");
 const vendor = require("../model/vender.model");
 const { generateToken } = require("../service/utils/generateToken");
-const sendMessage = require("../commonFunction/whatsAppMessage");
 const { link } = require("../routes/payment.routes");
 
 const registerClientUser = async (req, res) => {
@@ -28,9 +27,7 @@ const registerClientUser = async (req, res) => {
       userExists.clientType = clientType;
       userExists.email = email;
       await userExists.save();
-      sendMessage(
-        `Supplier Credential Updated for Supplier ${userExists.CompanyName}`
-      );
+    
       return res.status(201).send("ChineseUser sucessfully registered");
     }
     const result = await clientUser.create({
@@ -48,9 +45,7 @@ const registerClientUser = async (req, res) => {
       { $set: { isClient: true } }
     );
     res.status(201).send("ChineseUser sucessfully registered");
-    sendMessage(
-      `Supplier Credential Created for Supplier ${result.CompanyName}`
-    );
+ 
   } catch (err) {
     console.log(err);
     res.status(400).send(err.message);

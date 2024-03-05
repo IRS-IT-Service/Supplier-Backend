@@ -3,7 +3,7 @@ const vendor = require("../model/vender.model");
 const transaction = require("../model/transaction.model");
 const clientUser = require("../model/clientUser.model");
 const generateUniqueId = require("generate-unique-id");
-
+const sendMessage = require("../commonFunction/whatsAppMessage");
 
 //Add payment
 
@@ -174,6 +174,7 @@ const updatePaymentClient = async (req, res) => {
       type: "RemittanceList",
       message: `Remittance no ${paymentData.ReferenceId} Recieved by ${vendorData.ConcernPerson}`,
     });
+    await sendMessage(`Remittance no ${paymentData.ReferenceId} Recieved by ${vendorData.ConcernPerson}`)
     res
       .status(200)
       .send({ status: true, message: "Payment received successfully" });

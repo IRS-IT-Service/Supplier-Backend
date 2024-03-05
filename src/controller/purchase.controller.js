@@ -3,6 +3,7 @@ const vendor = require("../model/vender.model");
 const clientUser = require("../model/clientUser.model");
 const generateUniqueId = require("generate-unique-id");
 const transaction = require("../model/transaction.model");
+const sendMessage = require("../commonFunction/whatsAppMessage");
 
 const addPurchase = async (req, res) => {
   try {
@@ -111,6 +112,8 @@ const addPurchase = async (req, res) => {
       type: "Purchase",
       message: `Purchase done by ${vendorData.ConcernPerson}`,
     });
+
+    await sendMessage(`Purchase done by ${vendorData.ConcernPerson}`)
     res.status(200).send({
       sucess: true,
       message: "purchase created",

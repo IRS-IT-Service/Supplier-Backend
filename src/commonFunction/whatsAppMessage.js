@@ -2,7 +2,7 @@ const axios = require("axios");
 
 async function sendMessage(message) {
   let chatId = process.env.WHATSAPP_NUMBER;
-
+console.log("hiii")
   try {
     const response = await axios.post(
       process.env.WHATSAPP_URL,
@@ -16,16 +16,9 @@ async function sendMessage(message) {
         },
       }
     );
-    return process.env.WHATSAPP_NUMBER.slice(2, -5)
-      .split("")
-      .map((item, index) => {
-        if (index < 5) {
-          return "*";
-        } else {
-          return item;
-        }
-      })
-      .join("");
+    
+    return response.data
+    
   } catch (err) {
     console.log(err);
   }
