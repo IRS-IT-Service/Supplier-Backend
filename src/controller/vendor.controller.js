@@ -75,6 +75,7 @@ const registerVendor = async (req, res) => {
       type: "SupplierList ",
       message: `new vendor registered by the company name of ${req.body.CompanyName}`,
     });
+    await sendMessage(`New vendor registered by the company name of ${req.body.CompanyName}`)
     const result = await vendor.create(info);
     res.status(200).send({
       status: true,

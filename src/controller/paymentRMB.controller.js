@@ -2,7 +2,8 @@ const paymentRMB = require("../model/paymentRMB.model");
 const clientUser = require("../model/clientUser.model");
 const generateUniqueId = require("generate-unique-id");
 const transaction = require("../model/transaction.model");
-
+const sendMessage = require("../commonFunction/whatsAppMessage");
+const vendor = require("../model/vender.model");
 const addPaymentRMB = async (req, res) => {
   const { vendorId, paymentAmount, description } = req.body;
   const { reciept } = req.files;
@@ -127,6 +128,7 @@ const verifyPaymentRMB = async (req, res) => {
 
     const isVerifiy = await paymentRMB.findOne({ PaymentId });
     const isClient = await clientUser.findOne({ VendorId: isVerifiy.VendorId });
+    const VendorData = await vendor.findOne({ VendorId:isVerifiy.VendorId });
     if (!isClient) {
       throw new Error("client doesn't exist");
     }
@@ -169,11 +171,13 @@ const verifyPaymentRMB = async (req, res) => {
             Number(isClient.balanceRMB) + Number(paymentData.PaymentAmount),
         };
         const newTransaction = await transaction.create(tInfo);
+      
         req.io.emit("notificationAdmin", {
           type: "AddRMB",
           vendorId: isVerifiy.VendorId,
           message: `PaymentRMB amount ${paymentData.PaymentAmount} accepted by ${isVerifiy.VendorId}`,
         });
+        await sendMessage(`PaymentRMB amount ${paymentData.PaymentAmount} accepted by ${VendorData.ConcernPerson} ${isVerifiy.VendorId}` )
         res
           .status(200)
           .send({ sucess: true, message: "Payment RMB Successfully Accepted" });

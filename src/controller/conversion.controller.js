@@ -35,6 +35,8 @@ const addConversion = async (req, res) => {
       type: "convertion",
       message: `USD amount ${req.body.usd} converted to ${req.body.rmb} rmb by ${vendorData.ConcernPerson}`,
     });
+
+    await sendMessage(`USD amount ${req.body.usd} converted to ${req.body.rmb} rmb by ${vendorData.ConcernPerson}`)
     res.status(200).send({
       status: true,
       message: "Conversion successfully created",
