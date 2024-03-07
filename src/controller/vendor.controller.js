@@ -73,7 +73,7 @@ const registerVendor = async (req, res) => {
       BankDetails: bankDetails ? JSON.parse(bankDetails) : "",
     };
     req.io.emit("notificationAdmin", {
-      type: "SupplierList",
+      type: "SupplierList ",
       message: `new vendor registered by the company name of ${req.body.CompanyName}`,
     });
     await sendMessage(`New vendor registered by the company name of ${req.body.CompanyName}`)

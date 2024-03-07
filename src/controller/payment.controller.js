@@ -5,7 +5,6 @@ const clientUser = require("../model/clientUser.model");
 const generateUniqueId = require("generate-unique-id");
 const sendMessage = require("../commonFunction/whatsAppMessage");
 
-
 //Add payment
 
 const addPayment = async (req, res) => {

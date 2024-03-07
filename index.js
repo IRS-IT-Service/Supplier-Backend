@@ -30,12 +30,11 @@ const io = new Server(server, {
 });
 
 io.on("connection", (socket) => {
-  io.emit("firstEvent", "Hellow this is server ");
   socket.on("newUser", (data) => {
-    console.log(`${data} connected`);
+    console.log(data)
   });
   socket.on("disconnect", () => {
-    console.log("someone has left");
+    console.log(`someone has left ${socket.id}`);
   });
 });
 

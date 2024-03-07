@@ -4,6 +4,7 @@ const generateUniqueId = require("generate-unique-id");
 const transaction = require("../model/transaction.model");
 const sendMessage = require("../commonFunction/whatsAppMessage");
 const vendor = require("../model/vender.model");
+
 const addPaymentRMB = async (req, res) => {
   const { vendorId, paymentAmount, description } = req.body;
   const { reciept } = req.files;
@@ -175,9 +176,9 @@ const verifyPaymentRMB = async (req, res) => {
         req.io.emit("notificationAdmin", {
           type: "AddRMB",
           vendorId: isVerifiy.VendorId,
-          message: `PaymentRMB amount ${paymentData.PaymentAmount} accepted by ${isVerifiy.VendorId}`,
+          message: `PaymentId: ${PaymentId} amount ${paymentData.PaymentAmount} accepted by ${isVerifiy.VendorId}`,
         });
-        await sendMessage(`PaymentRMB amount ${paymentData.PaymentAmount} accepted by ${VendorData.ConcernPerson} ${isVerifiy.VendorId}` )
+        await sendMessage(`PaymentId: ${PaymentId} amount ${paymentData.PaymentAmount} accepted by ${VendorData.ConcernPerson}` )
         res
           .status(200)
           .send({ sucess: true, message: "Payment RMB Successfully Accepted" });
