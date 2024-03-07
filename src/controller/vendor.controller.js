@@ -3,6 +3,7 @@ const clientUser = require("../model/clientUser.model");
 const generateUniqueId = require("generate-unique-id");
 var path = require("path");
 const fs = require("fs");
+const sendMessage = require("../commonFunction/whatsAppMessage");
 
 const registerVendor = async (req, res) => {
   try {

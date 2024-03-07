@@ -3,7 +3,6 @@ const clientUser = require("../model/clientUser.model");
 const vendor = require("../model/vender.model");
 const sendMessage = require("../commonFunction/whatsAppMessage");
 
-
 const addAdminShipment = async (req, res) => {
   try {
     const { VendorId, TrackingId, CourierName, NoOfBoxes, remark, BoxDetails } =
