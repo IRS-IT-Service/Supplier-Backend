@@ -127,9 +127,9 @@ const addPurchase = async (req, res) => {
 const getPurchase = async (req, res) => {
   try {
     const { id } = req.query;
-    const page = parseInt(req.query.page) + 1;
-    const limit = parseInt(req.query.limit) || 12;
-    const skip = (page - 1) * limit;
+    // const page = parseInt(req.query.page) + 1;
+    // const limit = parseInt(req.query.limit) || 12;
+    // const skip = (page - 1) * limit;
 
     if (!id) {
       throw new Error("please add vendor id to get the payments");
@@ -140,17 +140,17 @@ const getPurchase = async (req, res) => {
         type: "other",
       })
       .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
+      // .skip(skip)
+      // .limit(limit);
     const resultSelf = await purchase
       .find({
         VendorId: id,
         type: "self",
       })
       .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
-    const total = await purchase.countDocuments({ VendorId: id });
+      // .skip(skip)
+      // .limit(limit);
+    const total = await purchase.countDocuments();
 
     let info = {
       other: resultOther,
@@ -160,11 +160,11 @@ const getPurchase = async (req, res) => {
       status: true,
       message: "Purchase fetch successfully",
       data: info,
-      currentPage: page,
-      itemCountSelf: resultSelf.length,
-      itemCountOther: resultOther.length,
-      itemsPerPage: limit,
-      totalItems: Math.ceil(total),
+      // currentPage: page,
+      // itemCountSelf: resultSelf.length,
+      // itemCountOther: resultOther.length,
+      // itemsPerPage: limit,
+      // totalItems: Math.ceil(total),
     });
   } catch (err) {
     res.status(400).send(err.message);
@@ -174,9 +174,9 @@ const getPurchase = async (req, res) => {
 const getClientPurchase = async (req, res) => {
   try {
     const { id } = req.query;
-    const page = parseInt(req.query.page) + 1;
-    const limit = parseInt(req.query.limit) || 12;
-    const skip = (page - 1) * limit;
+    // const page = parseInt(req.query.page) + 1;
+    // const limit = parseInt(req.query.limit) || 12;
+    // const skip = (page - 1) * limit;
 
     if (!id) {
       throw new Error("please ad vendor id to get the payments");
@@ -194,10 +194,10 @@ const getClientPurchase = async (req, res) => {
       status: true,
       message: "Purchase fetch successfully",
       data: resultOther,
-      currentPage: page,
-      itemCount: resultOther.length,
-      itemsPerPage: limit,
-      totalItems: Math.ceil(total),
+      // currentPage: page,
+      // itemCount: resultOther.length,
+      // itemsPerPage: limit,
+      // totalItems: Math.ceil(total),
     });
   } catch (err) {
     console.log(err);
