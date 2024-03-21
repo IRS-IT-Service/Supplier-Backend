@@ -2,7 +2,7 @@ const axios = require("axios");
 
 async function sendMessage(message) {
   let chatId = process.env.WHATSAPP_NUMBER;
-console.log("hiii")
+
   try {
     const response = await axios.post(
       process.env.WHATSAPP_URL,
