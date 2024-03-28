@@ -19,6 +19,9 @@ const purchaseSchema = mongoose.Schema(
     PaidTo: {
       type: String,
     },
+    PaidType: {
+      type: String,
+    },
     Date: {
       type: Date,
       default: new Date(),

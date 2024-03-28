@@ -7,21 +7,22 @@ const sendMessage = require("../commonFunction/whatsAppMessage");
 
 const addPurchase = async (req, res) => {
   try {
-    const { VendorId, type, PaymentAmount, PaidTo, Date, Description } =
+    const { VendorId, type, PaymentAmount, PaidTo, Date, Description ,PaidType } =
       req.body;
+      console.log(PaidType)
     const isClient = await clientUser.findOne({ VendorId });
     const vendorData = await vendor.findOne({ VendorId });
     if (!isClient) {
       throw new Error("client doesnt exist");
     }
-    if (isClient.clientType === "RMBandUSD") {
-      if (isClient.balanceRMB < +PaymentAmount) {
+    if (PaidType === "USD") {
+      if (isClient.balanceUSD < +PaymentAmount) {
         throw new Error("insufficient Balance ");
       }
     }
 
-    if (isClient.clientType === "USD") {
-      if (isClient.balanceUSD < +PaymentAmount) {
+    if (PaidType === "RMB") {
+      if (isClient.balanceRMB < +PaymentAmount) {
         throw new Error("insufficient Balance ");
       }
     }
@@ -38,6 +39,7 @@ const addPurchase = async (req, res) => {
       type,
       PaymentAmount,
       PaidTo,
+      PaidType,
       Date: Date,
       Description,
       PurchaseId: `PCH${gui}`,
@@ -50,7 +52,7 @@ const addPurchase = async (req, res) => {
       throw new Error("Failed to create purchase");
     }
     if (purchaseData) {
-      if (isClient.clientType === "RMBandUSD") {
+      if (PaidType === "RMB") {
         const balanceDeductRMB = await clientUser.updateOne(
           { VendorId },
           {
@@ -78,7 +80,7 @@ const addPurchase = async (req, res) => {
           };
           const newTransaction = await transaction.create(tInfo);
         }
-      } else if (isClient.clientType === "USD") {
+      } else if (PaidType === "USD") {
         const balanceDeductUSD = await clientUser.updateOne(
           { VendorId },
           {
