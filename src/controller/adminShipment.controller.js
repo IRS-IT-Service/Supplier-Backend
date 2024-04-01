@@ -7,7 +7,9 @@ const addAdminShipment = async (req, res) => {
   try {
     const { VendorId, TrackingId, CourierName, NoOfBoxes, remark, BoxDetails } =
       req.body;
+    
     const isClient = await clientUser.findOne({ VendorId });
+    console.log(isClient)
     if (!isClient) {
       throw new Error("Client doesn't exist");
     }
@@ -115,7 +117,7 @@ const getVendorAdminShipment = async (req, res) => {
       .sort({ updatedAt: -1 })
       .skip(skip)
       .limit(limit);
-
+console.log(shipmentData)
     const total = await adminShipment.countDocuments({ VendorId: id });
 
     if (!shipmentData) {
