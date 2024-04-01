@@ -146,10 +146,12 @@ if(!TrackingId){
   throw new Error("Shipment not found !")
 }
 
-    const shipmentData = await adminShipment.findOne({ TrackingId});
+    const shipmentData = await adminShipment.findOne({TrackingId});
+  
     const vendorData = await vendor.findOne({
       VendorId: shipmentData.VendorId,
     });
+
     const shipmentUpdate = await adminShipment.findOneAndUpdate(
       { TrackingId },
       {
@@ -160,10 +162,10 @@ if(!TrackingId){
     );
     req.io.emit("notificationAdmin", {
       type: "Shipment",
-      message: `shipment with tracking id ${id} accepted by ${vendorData.ConcernPerson}`,
+      message: `shipment with tracking id ${TrackingId} accepted by ${vendorData.ConcernPerson}`,
     });
 
-    await sendMessage(`Shipment with tracking id ${id} accepted by ${vendorData.ConcernPerson}`)
+    await sendMessage(`Shipment with tracking id ${TrackingId} accepted by ${vendorData.ConcernPerson}`)
 
     res.status(200).send({status:true ,message:"Shipment updated successfully"});
   } catch (err) {
