@@ -3,24 +3,26 @@ const vendor = require("../model/vender.model");
 const clientUser = require("../model/clientUser.model");
 const generateUniqueId = require("generate-unique-id");
 const transaction = require("../model/transaction.model");
+const sendMessage = require("../commonFunction/whatsAppMessage");
 
 const addPurchase = async (req, res) => {
   try {
-    const { VendorId, type, PaymentAmount, PaidTo, Date, Description } =
+    const { VendorId, type, PaymentAmount, PaidTo, Date, Description ,PaidType } =
       req.body;
+      console.log(PaidType)
     const isClient = await clientUser.findOne({ VendorId });
     const vendorData = await vendor.findOne({ VendorId });
     if (!isClient) {
       throw new Error("client doesnt exist");
     }
-    if (isClient.clientType === "RMBandUSD") {
-      if (isClient.balanceRMB < req.body.paymentAmount) {
+    if (PaidType === "USD") {
+      if (isClient.balanceUSD < +PaymentAmount) {
         throw new Error("insufficient Balance ");
       }
     }
 
-    if (isClient.clientType === "USD") {
-      if (isClient.balanceUSD < req.body.paymentAmount) {
+    if (PaidType === "RMB") {
+      if (isClient.balanceRMB < +PaymentAmount) {
         throw new Error("insufficient Balance ");
       }
     }
@@ -37,6 +39,7 @@ const addPurchase = async (req, res) => {
       type,
       PaymentAmount,
       PaidTo,
+      PaidType,
       Date: Date,
       Description,
       PurchaseId: `PCH${gui}`,
@@ -49,7 +52,7 @@ const addPurchase = async (req, res) => {
       throw new Error("Failed to create purchase");
     }
     if (purchaseData) {
-      if (isClient.clientType === "RMBandUSD") {
+      if (PaidType === "RMB") {
         const balanceDeductRMB = await clientUser.updateOne(
           { VendorId },
           {
@@ -77,7 +80,7 @@ const addPurchase = async (req, res) => {
           };
           const newTransaction = await transaction.create(tInfo);
         }
-      } else if (isClient.clientType === "USD") {
+      } else if (PaidType === "USD") {
         const balanceDeductUSD = await clientUser.updateOne(
           { VendorId },
           {
@@ -107,7 +110,12 @@ const addPurchase = async (req, res) => {
         }
       }
     }
+    req.io.emit("notificationAdmin", {
+      type: "Purchase",
+      message: `Purchase done by ${vendorData.ConcernPerson}`,
+    });
 
+    await sendMessage(`Purchase done by ${vendorData.ConcernPerson}`)
     res.status(200).send({
       sucess: true,
       message: "purchase created",
@@ -121,9 +129,9 @@ const addPurchase = async (req, res) => {
 const getPurchase = async (req, res) => {
   try {
     const { id } = req.query;
-    const page = parseInt(req.query.page) + 1;
-    const limit = parseInt(req.query.limit) || 12;
-    const skip = (page - 1) * limit;
+    // const page = parseInt(req.query.page) + 1;
+    // const limit = parseInt(req.query.limit) || 12;
+    // const skip = (page - 1) * limit;
 
     if (!id) {
       throw new Error("please add vendor id to get the payments");
@@ -134,17 +142,17 @@ const getPurchase = async (req, res) => {
         type: "other",
       })
       .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
+      // .skip(skip)
+      // .limit(limit);
     const resultSelf = await purchase
       .find({
         VendorId: id,
         type: "self",
       })
       .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
-    const total = await purchase.countDocuments({ VendorId: id });
+      // .skip(skip)
+      // .limit(limit);
+    const total = await purchase.countDocuments();
 
     let info = {
       other: resultOther,
@@ -154,11 +162,11 @@ const getPurchase = async (req, res) => {
       status: true,
       message: "Purchase fetch successfully",
       data: info,
-      currentPage: page,
-      itemCountSelf: resultSelf.length,
-      itemCountOther: resultOther.length,
-      itemsPerPage: limit,
-      totalItems: Math.ceil(total),
+      // currentPage: page,
+      // itemCountSelf: resultSelf.length,
+      // itemCountOther: resultOther.length,
+      // itemsPerPage: limit,
+      // totalItems: Math.ceil(total),
     });
   } catch (err) {
     res.status(400).send(err.message);
@@ -168,9 +176,9 @@ const getPurchase = async (req, res) => {
 const getClientPurchase = async (req, res) => {
   try {
     const { id } = req.query;
-    const page = parseInt(req.query.page) + 1;
-    const limit = parseInt(req.query.limit) || 12;
-    const skip = (page - 1) * limit;
+    // const page = parseInt(req.query.page) + 1;
+    // const limit = parseInt(req.query.limit) || 12;
+    // const skip = (page - 1) * limit;
 
     if (!id) {
       throw new Error("please ad vendor id to get the payments");
@@ -188,10 +196,10 @@ const getClientPurchase = async (req, res) => {
       status: true,
       message: "Purchase fetch successfully",
       data: resultOther,
-      currentPage: page,
-      itemCount: resultOther.length,
-      itemsPerPage: limit,
-      totalItems: Math.ceil(total),
+      // currentPage: page,
+      // itemCount: resultOther.length,
+      // itemsPerPage: limit,
+      // totalItems: Math.ceil(total),
     });
   } catch (err) {
     console.log(err);
@@ -201,23 +209,39 @@ const getClientPurchase = async (req, res) => {
 
 const getAllPurchase = async (req, res) => {
   try {
-    const page = parseInt(req.query.page) + 1;
-    const limit = parseInt(req.query.limit) || 12;
+    let { page = 1, limit = 50, filterById } = req.query;
+
+    page = parseInt(page);
+    limit = parseInt(limit);
+
     const skip = (page - 1) * limit;
-    const result = await purchase
-      .find()
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
-    const total = await purchase.countDocuments({});
+    let result;
+    let total;
+    if (filterById) {
+      result = await purchase
+        .find({ VendorId: filterById })
+        .sort({ updatedAt: -1 })
+        .skip(skip)
+        .limit(limit);
+      total = await purchase.countDocuments({ VendorId: filterById });
+    } else {
+      result = await purchase
+        .find({})
+        .sort({ updatedAt: -1 })
+        .skip(skip)
+        .limit(limit);
+      total = await purchase.countDocuments({});
+    }
+
     res.status(200).send({
       status: true,
-      message: "All purchase data fetch successfully",
-      data: result,
-      currentPage: page,
-      itemCount: result.length,
+      message: "All Payment data fetch successfully",
+      page: page,
+      totalCount: total,
       itemsPerPage: limit,
-      totalItems: Math.ceil(total),
+      currentItemsCount: result.length,
+      totalPages: Math.ceil(total / limit),
+      data: result,
     });
   } catch (err) {
     res.status(400).send(err.message);
@@ -234,66 +258,76 @@ const getOnePurchase = async (req, res) => {
     const result = await purchase.findOne({
       PurchaseId: id,
     });
-    res
-      .status(200)
-      .send({
-        status: true,
-        message: "Purchase data fetch successfully",
-        data: result,
-      });
+    res.status(200).send({
+      status: true,
+      message: "Purchase data fetch successfully",
+      data: result,
+    });
   } catch (err) {
     res.status(400).send(err);
   }
 };
 
 const rejectPurchase = async (req, res) => {
-    try {
-      const { id } = req.params;
-      const purchaseData = await purchase.findOne({ PurchaseId: id });
-  
-      if (!purchaseData) {
-        throw new Error("Invalid data");
-      }
-  
-      const result = await purchase.findOneAndUpdate(
-        { PurchaseId: id },
-        { $set: { status: "Rejected" } },
-        { new: true }
-      );
-  
-      const VendorData = await clientUser.findOne({ VendorId: purchaseData.VendorId });
-  
-      if (VendorData.clientType === "RMBandUSD") {
-        const balanceAddRMB = await clientUser.findOneAndUpdate(
-          { VendorId: purchaseData.VendorId },
-          {
-            $set: {
-              balanceRMB: Number(VendorData.balanceRMB) + Number(purchaseData.PaymentAmount),
-            },
-          }
-        );
-      } else if (VendorData.clientType === "USD") {
-        const balanceAddUSD = await clientUser.findOneAndUpdate(
-          { VendorId: purchaseData.VendorId },
-          {
-            $set: {
-              balanceRMB: Number(VendorData.balanceRMB) + Number(purchaseData.PaymentAmount),
-            },
-          }
-        );
-      }
-  
-      const removeTransaction = await transaction.findOneAndDelete({
-        RefId: purchaseData.PurchaseId,
-      });
-  
-      res.status(200).send({ status: true, message: "Reject successfully", data: result });
-    } catch (err) {
-      console.error(err);
-      res.status(400).send({ status: false, message: err.message });
+  try {
+    const { id } = req.params;
+    const purchaseData = await purchase.findOne({ PurchaseId: id });
+
+    if (!purchaseData || purchaseData.status === "Rejected") {
+      throw new Error("Invalid data");
     }
-  };
-  
+
+    const result = await purchase.findOneAndUpdate(
+      { PurchaseId: id },
+      { $set: { status: "Rejected" } },
+      { new: true }
+    );
+
+    const VendorData = await clientUser.findOne({
+      VendorId: purchaseData.VendorId,
+    });
+
+    if (VendorData.clientType === "RMBandUSD") {
+      const balanceAddRMB = await clientUser.findOneAndUpdate(
+        { VendorId: purchaseData.VendorId },
+        {
+          $set: {
+            balanceRMB:
+              Number(VendorData.balanceRMB) +
+              Number(purchaseData.PaymentAmount),
+          },
+        }
+      );
+    } else if (VendorData.clientType === "USD") {
+      const balanceAddUSD = await clientUser.findOneAndUpdate(
+        { VendorId: purchaseData.VendorId },
+        {
+          $set: {
+            balanceRMB:
+              Number(VendorData.balanceRMB) +
+              Number(purchaseData.PaymentAmount),
+          },
+        }
+      );
+    }
+
+    const removeTransaction = await transaction.findOneAndDelete({
+      RefId: purchaseData.PurchaseId,
+    });
+    if (result) {
+      req.io.emit("notificationClient", {
+        type: "purchase",
+        message: `Purchase rejected ${purchaseData.PurchaseId}`,
+      });
+    }
+    res
+      .status(200)
+      .send({ status: true, message: "Reject successfully", data: result });
+  } catch (err) {
+    console.error(err);
+    res.status(400).send({ status: false, message: err.message });
+  }
+};
 
 module.exports = {
   addPurchase,
@@ -301,6 +335,5 @@ module.exports = {
   getClientPurchase,
   getAllPurchase,
   getOnePurchase,
-  rejectPurchase
-  
+  rejectPurchase,
 };

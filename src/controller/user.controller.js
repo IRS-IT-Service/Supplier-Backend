@@ -4,7 +4,7 @@ const guid = require("generate-unique-id");
 const sendMessage = require("../commonFunction/whatsAppMessage");
 const generateUniqueId = require("generate-unique-id");
 const userModel = require("../model/user.model");
-const bcrypt = require('bcrypt');
+const bcrypt = require("bcrypt");
 
 const registerUser = async (req, res) => {
   try {
@@ -50,58 +50,52 @@ const registerUser = async (req, res) => {
   }
 };
 
-const userForgetOTP = async (req,res) =>{
-  try{
-const {email} =req.body
-let guiOTP = generateUniqueId({
-  length: 4,
-  useLetters: false,
-});
-const userExist = await user.findOne({ email: email });
+const userForgetOTP = async (req, res) => {
+  try {
+    const { email } = req.body;
+    let guiOTP = generateUniqueId({
+      length: 4,
+      useLetters: false,
+    });
+    const userExist = await user.findOne({ email: email });
 
-if (!userExist) {
- throw new Error("User not found");
-}
-
-userExist.resetOtp = guiOTP
-userExist.save()
-const clientId = await sendMessage(`Your Otp is ${guiOTP}`);
-res.status(200).send({
-  status: true,
-  message: `We have sent a code to Admin Whatsapp No ${clientId}`,
-
-});
-
-
-  }catch(err){
-res.status(400).send(err.message)
+    if (!userExist) {
+      throw new Error("User not found");
+    }
+console.log(userExist);
+    userExist.resetOtp = guiOTP;
+    userExist.save();
+    const clientId = await sendMessage(`Your Otp is ${guiOTP}`);
+    res.status(200).send({
+      status: true,
+      message: `We have sent a code to Admin Whatsapp No ${clientId}`,data:userExist.userId
+    });
+  } catch (err) {
+    res.status(400).send(err.message);
   }
-}
-
+};
 
 const verifyresetwithOtp = async (req, res) => {
   try {
-    const { userId, otp ,password } = req.body;
- 
+    const { userId, otp, password } = req.body;
+
     const userData = await user.findOne({ userId });
-    if(!userData){
-      throw new Error("User not Found")
+    if (!userData) {
+      throw new Error("User not Found");
     }
 
     if (otp !== userData.resetOtp) {
       throw new Error("Invalid OTP");
     }
-if(!password){
-  throw new Error("Please enter new password")
-}
-const salt = await bcrypt.genSalt(10);
-const newPassword = await bcrypt.hash(password, salt);
-
+    if (!password) {
+      throw new Error("Please enter new password");
+    }
+    const salt = await bcrypt.genSalt(10);
+    const newPassword = await bcrypt.hash(password, salt);
 
     const response = await user.findOneAndUpdate(
       { userId },
-      { $set: { password: newPassword
- } }
+      { $set: { password: newPassword } }
     );
 
     return res
@@ -111,8 +105,6 @@ const newPassword = await bcrypt.hash(password, salt);
     res.status(400).send(err.message);
   }
 };
-
-
 
 const verifyOtp = async (req, res) => {
   try {
@@ -147,7 +139,7 @@ const authUser = async (req, res) => {
     }
 
     const matchPassword = await userData.matchPassword(password);
- 
+
     if (!matchPassword) {
       throw new Error("Invalid Password");
     }
@@ -174,7 +166,6 @@ const authUser = async (req, res) => {
       },
     });
   } catch (err) {
-   
     res.status(400).send(err.message);
   }
 };
@@ -200,9 +191,10 @@ const getAllUser = async (req, res) => {
   try {
     const allUserData = await user.find({}).select("-password -otp").lean();
     // Modify the result to add 'id' field
-    const modifiedUserData = allUserData.map((user) => ({
+    const modifiedUserData = allUserData.map((user, index) => ({
       ...user,
       id: user.userId,
+      Sno: index + 1,
     }));
 
     res.status(200).send({
@@ -239,32 +231,40 @@ const toggleUser = async (req, res) => {
     const updatedUser = await user.findOneAndUpdate(
       { userId },
       { $set: updateFields },
-      { new: true } 
+      { new: true }
     );
 
     res.status(200).send({
       status: true,
       message: "User has been updated",
-      });
+    });
   } catch (err) {
     res.status(400).send(err.message);
   }
 };
 
 const removeUser = async (req, res) => {
-  try{
-const {userId} = req.body
+  try {
+    const { userId } = req.body;
 
-const userData = await user.findOneAndDelete({userId})
-if(!userData){
-  throw new Error("user not found")
-}
-res.status(200).send({status:true , message:"user has been deleted"})
-
-  }catch(err){
-res.status(400).send(err.message)
+    const userData = await user.findOneAndDelete({ userId });
+    if (!userData) {
+      throw new Error("user not found");
+    }
+    res.status(200).send({ status: true, message: "User has been deleted" });
+  } catch (err) {
+    res.status(400).send(err.message);
   }
-}
+};
 
-
-module.exports = { registerUser, authUser, verifyOtp, logoutUser, getAllUser,userForgetOTP,verifyresetwithOtp,toggleUser,removeUser };
+module.exports = {
+  registerUser,
+  authUser,
+  verifyOtp,
+  logoutUser,
+  getAllUser,
+  userForgetOTP,
+  verifyresetwithOtp,
+  toggleUser,
+  removeUser,
+};

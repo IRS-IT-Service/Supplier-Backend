@@ -12,14 +12,56 @@ app.use(cookieParser());
 connectDB();
 
 // cors middleware
-app.use(cors({ origin: process.env.CLIENTURL, credentials: true }));
+app.use(cors({ origin: true, credentials: true }));
 
 app.use(express.urlencoded({ extended: false }));
+
+//Socket io
+
+const http = require("http");
+const { Server } = require("socket.io");
+const server = http.createServer(app);
+// by tehseem
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"],
+  },
+});
+
+io.on("connection", (socket) => {
+  socket.on("newUser", (data) => {
+    console.log(data)
+  });
+  socket.on("disconnect", () => {
+    console.log(`someone has left ${socket.id}`);
+  });
+});
+
+
+// io.on("connection",(socket) =>{
+//   console.log(`User connected: ${socket.id}`)
+
+//   socket.on("send_message",(data) =>{
+//     console.log(data)
+//   })
+// })
+
 
 // static routes
 const publicPath = path.join(__dirname, "public/upload");
 app.use(express.static(publicPath));
 
+
+app.get('/', (req, res) => {
+  res.json({ message: 'API is live!' });
+});
+
+
+app.use((req, res, next) => {
+  req.io = io;
+  next();
+});
 // user routes
 const user = require("./src/routes/user.routes");
 app.use("/user", user);
@@ -56,6 +98,10 @@ app.use("/purchase", purchase);
 const shipment = require("./src/routes/shipment.routes");
 app.use("/shipment", shipment);
 
-app.listen(port, () => {
+///adminShipment
+const adminShipment = require("./src/routes/adminShipment.routes");
+app.use("/adminShipment", adminShipment);
+
+server.listen(port, () => {
   console.log(`server listening on ${port}`);
 });
