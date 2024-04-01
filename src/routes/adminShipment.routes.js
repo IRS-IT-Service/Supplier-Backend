@@ -17,7 +17,7 @@ const uploadStorage = multer({ storage: storage });
 
 router.post('/addAdminShipment',uploadStorage.fields([{name:"file",maxCount:1}]),addAdminShipment)
 
-router.get("/getVendorAdminShipment",clientJwtAuthentication,getVendorAdminShipment)
+router.get("/getVendorAdminShipment",getVendorAdminShipment)
 router.get("/getOneAdminShipment/:id",getOneAdminShipment)
 router.get("/getAllAdminShipment",getAllAdminShipment)
 router.post("/verifyAdminShipment",verifyAdminShipment)
