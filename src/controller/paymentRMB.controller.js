@@ -95,7 +95,7 @@ const getPaymentRMBById = async (req, res) => {
     const { VendorId } = req.query;
 
     const page = parseInt(req.query.page) + 1;
-    const limit = parseInt(req.query.limit) || 12;
+    const limit = parseInt(req.query.limit) || 20;
     const skip = (page - 1) * limit;
     const payments = await paymentRMB
       .find({ VendorId })
