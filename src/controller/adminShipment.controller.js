@@ -60,7 +60,7 @@ const addAdminShipment = async (req, res) => {
 const getAllAdminShipment = async (req, res) => {
   let queryCondition = {};
   try {
-    let { page = 1, limit = 12, query } = req.query;
+    let { page = 1, limit = 20, query } = req.query;
     page = parseInt(page);
     limit = parseInt(limit);
     const skip = (page - 1) * limit;
