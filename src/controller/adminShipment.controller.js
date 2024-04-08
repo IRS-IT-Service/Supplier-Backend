@@ -9,14 +9,16 @@ const addAdminShipment = async (req, res) => {
       req.body;
 
     const isClient = await clientUser.findOne({ VendorId });
-    console.log(isClient);
+
     if (!isClient) {
       throw new Error("Client doesn't exist");
     }
     const isTrackingId = await adminShipment.findOne({
       TrackingId,
     });
-
+    if (!req.files || !req.files.file) {
+      throw new Error("Receipt is required");
+    }
     if (isTrackingId) {
       throw new Error("Tracking Id already exist");
     }
