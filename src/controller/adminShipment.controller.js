@@ -79,7 +79,7 @@ const getAllAdminShipment = async (req, res) => {
 
     const shipmentData = await adminShipment
       .find(queryCondition)
-      .sort({ updatedAt: -1 })
+      .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
 
@@ -129,7 +129,7 @@ const getVendorAdminShipment = async (req, res) => {
     const skip = (page - 1) * limit;
     const shipmentData = await adminShipment
       .find({ VendorId: id })
-      .sort({ updatedAt: -1 })
+      .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
     console.log(shipmentData);
