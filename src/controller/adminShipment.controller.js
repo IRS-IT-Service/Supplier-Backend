@@ -127,7 +127,7 @@ const getVendorAdminShipment = async (req, res) => {
   try {
     const { id } = req.query;
     const page = parseInt(req.query.page) + 1;
-    const limit = parseInt(req.query.limit) || 12;
+    const limit = parseInt(req.query.limit) || 20;
     const skip = (page - 1) * limit;
     const shipmentData = await adminShipment
       .find({ VendorId: id })
