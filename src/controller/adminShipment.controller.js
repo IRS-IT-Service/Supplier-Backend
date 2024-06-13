@@ -7,16 +7,18 @@ const addAdminShipment = async (req, res) => {
   try {
     const { VendorId, TrackingId, CourierName, NoOfBoxes, remark, BoxDetails } =
       req.body;
-    
+
     const isClient = await clientUser.findOne({ VendorId });
-    console.log(isClient)
+
     if (!isClient) {
       throw new Error("Client doesn't exist");
     }
     const isTrackingId = await adminShipment.findOne({
       TrackingId,
     });
-
+    if (!req.files || !req.files.file) {
+      throw new Error("Receipt is required");
+    }
     if (isTrackingId) {
       throw new Error("Tracking Id already exist");
     }
@@ -56,22 +58,37 @@ const addAdminShipment = async (req, res) => {
 };
 
 const getAllAdminShipment = async (req, res) => {
+  let queryCondition = {};
   try {
-    let { page = 1, limit = 12 } = req.query;
-     page = parseInt(page);
-     limit = parseInt(limit) ;
+    let { page = 1, limit = 20, query } = req.query;
+    page = parseInt(page);
+    limit = parseInt(limit);
     const skip = (page - 1) * limit;
+ 
+    if (query === "Pending") {
+      queryCondition = {
+        isFullfilled: false,
+        isRejected: false,
+        isVerified: false,
+      };
+    } else if (query === "isFullfilled") {
+      queryCondition = { isFullfilled: true };
+    } else if (query === "isRejected") {
+      queryCondition = { isRejected: true };
+    }else{
+      queryCondition = {}
+    }
 
     const shipmentData = await adminShipment
-      .find()
-      .sort({ updatedAt: -1 })
+      .find(queryCondition)
+      .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
 
     if (!shipmentData) {
       throw new Error("No shipment exist !");
     }
-    const total = await adminShipment.countDocuments({});
+    const total = await adminShipment.countDocuments(queryCondition);
     res.status(200).send({
       status: true,
       message: "Payment data fetch successfully",
@@ -110,14 +127,14 @@ const getVendorAdminShipment = async (req, res) => {
   try {
     const { id } = req.query;
     const page = parseInt(req.query.page) + 1;
-    const limit = parseInt(req.query.limit) || 12;
+    const limit = parseInt(req.query.limit) || 20;
     const skip = (page - 1) * limit;
     const shipmentData = await adminShipment
       .find({ VendorId: id })
-      .sort({ updatedAt: -1 })
+      .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
-console.log(shipmentData)
+    console.log(shipmentData);
     const total = await adminShipment.countDocuments({ VendorId: id });
 
     if (!shipmentData) {
@@ -140,16 +157,18 @@ console.log(shipmentData)
 
 const verifyAdminShipment = async (req, res) => {
   try {
-    const { status ,TrackingId } = req.body;
+    const { status, TrackingId } = req.body;
 
-if(!TrackingId){
-  throw new Error("Shipment not found !")
-}
+    if (!TrackingId) {
+      throw new Error("Shipment not found !");
+    }
 
-    const shipmentData = await adminShipment.findOne({ TrackingId});
+    const shipmentData = await adminShipment.findOne({ TrackingId });
+
     const vendorData = await vendor.findOne({
       VendorId: shipmentData.VendorId,
     });
+
     const shipmentUpdate = await adminShipment.findOneAndUpdate(
       { TrackingId },
       {
@@ -160,12 +179,16 @@ if(!TrackingId){
     );
     req.io.emit("notificationAdmin", {
       type: "Shipment",
-      message: `shipment with tracking id ${id} accepted by ${vendorData.ConcernPerson}`,
+      message: `shipment with tracking id ${TrackingId} accepted by ${vendorData.ConcernPerson}`,
     });
 
-    await sendMessage(`Shipment with tracking id ${id} accepted by ${vendorData.ConcernPerson}`)
+    await sendMessage(
+      `Shipment with tracking id ${TrackingId} accepted by ${vendorData.ConcernPerson}`
+    );
 
-    res.status(200).send({status:true ,message:"Shipment updated successfully"});
+    res
+      .status(200)
+      .send({ status: true, message: "Shipment updated successfully" });
   } catch (err) {
     res.status(400).send(err.message);
   }
@@ -176,5 +199,5 @@ module.exports = {
   getVendorAdminShipment,
   getOneAdminShipment,
   getAllAdminShipment,
-  verifyAdminShipment
+  verifyAdminShipment,
 };
