@@ -151,7 +151,7 @@ const authUser = async (req, res) => {
     const token = generateToken(userData._id);
     res.cookie("token", token, {
       httpOnly: true,
-      maxAge: 7 * 24 * 60 * 60 * 1000, // Cookie expires in 7 days
+      expires: 7 * 24 * 60 * 60 * 1000, 
     });
 
     res.status(200).send({
