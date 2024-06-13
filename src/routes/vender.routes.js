@@ -24,14 +24,14 @@ router.post(
   ]),
   registerVendor
 );
-router.get("/getAllVendor", jwtAuthentication, getAllVendor);
-router.get("/getOneVendor/:id", jwtAuthentication, getOneVendor);
+router.get("/getAllVendor",getAllVendor);
+router.get("/getOneVendor/:id", getOneVendor);
 router.delete("/deleteVendor", jwtAuthentication, deleteVendor);
 router.put("/updateVendor/:id",  upload.fields([
   { name: "logo", maxCount: 1 },
   { name: "certificate", maxCount: 1 },
-]), jwtAuthentication, updateVendor);
-router.post("/toggleVendor", jwtAuthentication, toggleVendor);
+]), updateVendor);
+router.post("/toggleVendor", toggleVendor);
 
 
 module.exports = router;
