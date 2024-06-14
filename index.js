@@ -93,7 +93,9 @@ app.use("/conversion", conversion);
 /// purchase routes
 const purchase = require("./src/routes/purchase.routes");
 app.use("/purchase", purchase);
-
+///notification
+const notification = require("./src/routes/notifications.routes");
+app.use("/notification", notification);
 ///shipment
 const shipment = require("./src/routes/shipment.routes");
 app.use("/shipment", shipment);

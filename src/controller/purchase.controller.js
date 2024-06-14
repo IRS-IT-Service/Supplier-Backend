@@ -4,6 +4,7 @@ const clientUser = require("../model/clientUser.model");
 const generateUniqueId = require("generate-unique-id");
 const transaction = require("../model/transaction.model");
 const sendMessage = require("../commonFunction/whatsAppMessage");
+const saveNotification = require("../commonFunction/saveNotification");
 
 const addPurchase = async (req, res) => {
   try {
@@ -110,6 +111,15 @@ const addPurchase = async (req, res) => {
         }
       }
     }
+
+    const data = {
+      vendorId: VendorId,
+      notificationType:"admin",
+      click:"Purchase",
+      message: `Purchase done by ${vendorData.ConcernPerson}`,
+    }
+    saveNotification(data)
+
     req.io.emit("notificationAdmin", {
       type: "Purchase",
       message: `Purchase done by ${vendorData.ConcernPerson}`,
@@ -315,6 +325,16 @@ const rejectPurchase = async (req, res) => {
       RefId: purchaseData.PurchaseId,
     });
     if (result) {
+
+      const data = {
+        vendorId: isVerifiy.VendorId,
+        notificationType:"client",
+        click:"purchase",
+        message: `Purchase rejected ${purchaseData.PurchaseId}`,
+      }
+      saveNotification(data)
+
+
       req.io.emit("notificationClient", {
         type: "purchase",
         message: `Purchase rejected ${purchaseData.PurchaseId}`,

@@ -2,6 +2,7 @@ const shipment = require("../model/shipment.model");
 const vendor = require("../model/vender.model");
 const clientUser = require("../model/clientUser.model");
 const sendMessage = require("../commonFunction/whatsAppMessage");
+const saveNotification = require("../commonFunction/saveNotification");
 
 const addShipment = async (req, res) => {
   try {
@@ -38,6 +39,14 @@ const addShipment = async (req, res) => {
     if (!shipmentData) {
       throw new Error("shipment creation failed");
     }
+    const data = {
+      vendorId: isVerifiy.VendorId,
+      notificationType:"admin",
+      click:"Shipment",
+      message: `Shipment created by ${vendorData.ConcernPerson}`,
+    }
+    saveNotification(data)
+
     req.io.emit("notificationAdmin", {
       type: "Shipment",
       time:new Date(),
@@ -155,10 +164,18 @@ const verifyShipment = async (req, res) => {
           },
         }
       );
+      const data = {
+        vendorId: shipmentData.VendorId,
+        notificationType:"client",
+        click:"ShipmentReceived",
+        message: `Shipment with tracking id ${trackingId} rejected`,
+      }
+      saveNotification(data)
+
       req.io.emit("notificationClient", {
         type: "shipment",
         vendorId: shipmentData.VendorId,
-        message: `Shipment with tracking id ${id} rejected`,
+        message: `Shipment with tracking id ${trackingId} rejected`,
       });
       return res
         .status(200)
@@ -173,10 +190,19 @@ const verifyShipment = async (req, res) => {
         },
       }
     );
-    req.io.emit("notificationClient", {
-      type: "shipment",
+
+    const data = {
       vendorId: shipmentData.VendorId,
-      message: `Shipment with tracking id ${id} accepted`,
+      notificationType:"client",
+      click:"ShipmentReceived",
+      message: `Shipment with tracking id ${trackingId} accepted`,
+    }
+    saveNotification(data)
+
+    req.io.emit("notificationClient", {
+      type: "ShipmentReceived",
+      vendorId: shipmentData.VendorId,
+      message: `Shipment with tracking id ${trackingId} accepted`,
     });
     res.status(200).send({
       status: true,
