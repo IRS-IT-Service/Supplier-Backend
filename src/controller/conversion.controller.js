@@ -4,6 +4,7 @@ const clientUser = require("../model/clientUser.model");
 const generateUniqueId = require("generate-unique-id");
 const transaction = require("../model/transaction.model");
 const sendMessage = require("../commonFunction/whatsAppMessage");
+const saveNotification = require("../commonFunction/saveNotification");
 
 const addConversion = async (req, res) => {
   try {
@@ -33,12 +34,20 @@ const addConversion = async (req, res) => {
     };
 
     const result = await conversion.create(info);
+    const data = {
+      vendorId: VendorId,
+      notificationType:"admin",
+      click:"ConversionList",
+      message: `USD amount ${USD} converted to ${RMB} rmb by ${VendorData.ConcernPerson}`,
+    }
+    saveNotification(data)
+
     req.io.emit("notificationAdmin", {
-      type: "convertion",
-      message: `USD amount ${req.body.usd} converted to ${req.body.rmb} rmb by ${VendorData.ConcernPerson}`,
+      type: "ConversionList",
+      message: `USD amount ${USD} converted to ${RMB} rmb by ${VendorData.ConcernPerson}`,
     });
 
-    await sendMessage(`USD amount ${req.body.usd} converted to ${req.body.rmb} rmb by ${VendorData.ConcernPerson}`)
+    await sendMessage(`USD amount ${USD} converted to ${USD} rmb by ${VendorData.ConcernPerson}`)
     res.status(200).send({
       status: true,
       message: "Conversion successfully created",
@@ -145,8 +154,16 @@ const updateConversionAdmin = async (req, res) => {
           },
         }
       );
+      const data = {
+        vendorId: conversionData.VendorId,
+        notificationType:"client",
+        click:"RMBCalculator",
+        message: `Conversion of amount ${conversionData.USD} USD rejected , try converting again `,
+      }
+      saveNotification(data)
+
       req.io.emit("notificationClient", {
-        type: "convertion",
+        type: "RMBCalculator",
         vendorId: conversionData.VendorId,
         message: `Conversion of amount ${conversionData.USD} USD rejected , try converting again `,
       });
@@ -215,8 +232,16 @@ const updateConversionAdmin = async (req, res) => {
       FinalAmount: updatedRMB,
     };
     const newTransaction = await transaction.create([InfoRMB, InfoUSD]);
+    const data = {
+      vendorId: conversionData.VendorId,
+      notificationType:"client",
+      click:"RMBCalculator",
+      message: `Conversion of amount ${conversionData.USD} USD accepted `,
+    }
+    saveNotification(data)
+
     req.io.emit("notificationClient", {
-      type: "convertion",
+      type: "RMBCalculator",
       vendorId: conversionData.VendorId,
       message: `Conversion of amount ${conversionData.USD} USD accepted `,
     });

@@ -149,11 +149,14 @@ const authUser = async (req, res) => {
     }
 
     const token = generateToken(userData._id);
+    const expirationDate = new Date();
+    expirationDate.setDate(expirationDate.getDate() + 7);
+    
     res.cookie("token", token, {
       httpOnly: true,
-      expires: 7 * 24 * 60 * 60 * 1000, 
+      expires: expirationDate, 
     });
-
+    
     res.status(200).send({
       status: true,
       message: "Login successful",
