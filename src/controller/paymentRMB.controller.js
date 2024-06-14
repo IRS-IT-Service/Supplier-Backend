@@ -4,6 +4,7 @@ const generateUniqueId = require("generate-unique-id");
 const transaction = require("../model/transaction.model");
 const sendMessage = require("../commonFunction/whatsAppMessage");
 const vendor = require("../model/vender.model");
+const saveNotification = require("../commonFunction/saveNotification");
 
 const addPaymentRMB = async (req, res) => {
   const { vendorId, paymentAmount, description } = req.body;
@@ -30,7 +31,18 @@ const addPaymentRMB = async (req, res) => {
       Description: description,
       Reciept: recieptFile,
     };
+
+
     const paymentData = await paymentRMB.create(info);
+
+    const data = {
+      vendorId: vendorId,
+      notificationType:"client",
+      click:"PaymentRmb",
+      message: `Remittance Created of amount ¥ ${paymentAmount}`,
+    }
+    saveNotification(data)
+
     req.io.emit("notificationClient", {
       type: "PaymentRmb",
       vendorId: vendorId,
@@ -172,6 +184,14 @@ const verifyPaymentRMB = async (req, res) => {
             Number(isClient.balanceRMB) + Number(paymentData.PaymentAmount),
         };
         const newTransaction = await transaction.create(tInfo);
+
+        const data = {
+          vendorId: isVerifiy.VendorId,
+          notificationType:"admin",
+          click:"AddRMB",
+          message: `PaymentId: ${PaymentId} amount ${paymentData.PaymentAmount} accepted by ${isVerifiy.VendorId}`,
+        }
+        saveNotification(data)
       
         req.io.emit("notificationAdmin", {
           type: "AddRMB",

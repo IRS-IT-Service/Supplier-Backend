@@ -4,6 +4,7 @@ const transaction = require("../model/transaction.model");
 const clientUser = require("../model/clientUser.model");
 const generateUniqueId = require("generate-unique-id");
 const sendMessage = require("../commonFunction/whatsAppMessage");
+const saveNotification = require("../commonFunction/saveNotification");
 
 //Add payment
 
@@ -52,8 +53,16 @@ const addPayment = async (req, res) => {
     if (!paymentData) {
       throw new Error("Failed to create payment");
     }
+    const data = {
+      vendorId: VendorId,
+      notificationType:"client",
+      click:"RemmitanceStatus",
+      message: `Remittance Created of amount $ ${PaymentAmount}`,
+    }
+    saveNotification(data)
+
     req.io.emit("notificationClient", {
-      type: "remittance",
+      type: "RemmitanceStatus",
       vendorId: VendorId,
       message: `Remittance Created of amount $ ${PaymentAmount}`,
     });
@@ -170,6 +179,14 @@ const updatePaymentClient = async (req, res) => {
         },
       }
     );
+    const data = {
+      vendorId: paymentData.VendorId,
+      notificationType:"admin",
+      click:"RemittanceList",
+      message: `Remittance no ${paymentData.ReferenceId} Recieved by ${vendorData.ConcernPerson}`,
+    }
+    saveNotification(data)
+
     req.io.emit("notificationAdmin", {
       type: "RemittanceList",
       message: `Remittance no ${paymentData.ReferenceId} Recieved by ${vendorData.ConcernPerson}`,
@@ -203,6 +220,15 @@ const updatePaymentAdmin = async (req, res) => {
           },
         }
       );
+
+      const data = {
+        vendorId: paymentUSD.VendorId,
+        notificationType:"client",
+        click:"RemmitanceStatus",
+        message: `Remittance ${referenceId} rejected `,
+      }
+      saveNotification(data)
+
       req.io.emit("notificationClient", {
         type: "remittance",
         vendorId: result.VendorId,
@@ -261,6 +287,15 @@ const updatePaymentAdmin = async (req, res) => {
       };
       const newTransaction = await transaction.create(tInfo);
     }
+    const data = {
+      vendorId: paymentUSD.VendorId,
+      notificationType:"client",
+      click:"RemmitanceStatus",
+      message: `Remittance ${referenceId} Accepted`,
+    }
+    saveNotification(data)
+
+
     req.io.emit("notificationClient", {
       type: "remittance",
       vendorId: paymentUSD.VendorId,

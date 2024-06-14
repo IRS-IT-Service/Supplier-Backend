@@ -4,6 +4,7 @@ const generateUniqueId = require("generate-unique-id");
 var path = require("path");
 const fs = require("fs");
 const sendMessage = require("../commonFunction/whatsAppMessage");
+const saveNotification = require("../commonFunction/saveNotification");
 
 const registerVendor = async (req, res) => {
   try {
@@ -72,6 +73,14 @@ const registerVendor = async (req, res) => {
         : "",
       BankDetails: bankDetails ? JSON.parse(bankDetails) : "",
     };
+    const data = {
+      
+      notificationType:"admin",
+      click:"SupplierList",
+      message: `new vendor registered by the company name of ${req.body.CompanyName}`,
+    }
+    saveNotification(data)
+
     req.io.emit("notificationAdmin", {
       type: "SupplierList ",
       message: `new vendor registered by the company name of ${req.body.CompanyName}`,
