@@ -40,7 +40,7 @@ const addShipment = async (req, res) => {
       throw new Error("shipment creation failed");
     }
     const data = {
-      vendorId: isVerifiy.VendorId,
+      vendorId: VendorId,
       notificationType:"admin",
       click:"Shipment",
       message: `Shipment created by ${vendorData.ConcernPerson}`,
