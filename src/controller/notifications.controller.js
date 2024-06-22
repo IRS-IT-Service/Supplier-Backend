@@ -82,8 +82,20 @@ const deleteNotification = async (req, res) => {
 };
 
 const deleteAllNotificationClient = async (req, res) => {
+  const { id } = req.params;
+
+  if (!id) {
+    return res.status(400).send({
+      success: false,
+      message: "Vendor ID is required",
+    });
+  }
+
   try {
-    const result = await Notification.deleteMany({ notificationType: "client" });
+    const result = await Notification.deleteMany({
+      vendorId: id,
+      notificationType: "client",
+    });
 
     if (result.deletedCount === 0) {
       return res.status(404).send({
@@ -104,6 +116,7 @@ const deleteAllNotificationClient = async (req, res) => {
     });
   }
 };
+
 
 const deleteAllNotificationAdmin = async (req, res) => {
   try {
