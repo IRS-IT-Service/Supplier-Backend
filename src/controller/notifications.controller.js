@@ -81,9 +81,73 @@ const deleteNotification = async (req, res) => {
   }
 };
 
+const deleteAllNotificationClient = async (req, res) => {
+  const { id } = req.params;
+
+  if (!id) {
+    return res.status(400).send({
+      success: false,
+      message: "Vendor ID is required",
+    });
+  }
+
+  try {
+    const result = await Notification.deleteMany({
+      vendorId: id,
+      notificationType: "client",
+    });
+
+    if (result.deletedCount === 0) {
+      return res.status(404).send({
+        success: false,
+        message: "No client notifications found to delete",
+      });
+    }
+
+    res.status(200).send({
+      success: true,
+      message: "Client delete all notifications",
+    });
+  } catch (err) {
+    console.error("Error deleting notifications:", err);
+    res.status(500).send({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+
+
+const deleteAllNotificationAdmin = async (req, res) => {
+  try {
+    const result = await Notification.deleteMany({ notificationType: "admin" });
+
+    if (result.deletedCount === 0) {
+      return res.status(404).send({
+        success: false,
+        message: "No admin notifications found to delete",
+      });
+    }
+
+    res.status(200).send({
+      success: true,
+      message: "Admin delete all notifications",
+    });
+  } catch (err) {
+    console.error("Error deleting notifications:", err);
+    res.status(500).send({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+
+
 module.exports = {
   getAllNotifications,
   saveNotification,
   getNotificationsByVendorId,
   deleteNotification,
+  deleteAllNotificationClient,
+  deleteAllNotificationAdmin
 };
